@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LATTICE Explorer</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<title>QuantumProof Explorer</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
 <style>
 .search{display:flex;gap:10px;margin-top:26px}.search input{font-size:14px;padding:15px 18px}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:30px}.kpis .card{padding:22px}.kpis .v{font-size:28px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
@@ -10,9 +10,9 @@
 @media(max-width:900px){.kpis,.two{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.kv{grid-template-columns:1fr}}
 </style></head><body>
 <main class="wrap" style="padding-top:50px">
- <div class="kick">// explorer · lattice-testnet-1</div>
+ <div class="kick">// explorer · quantumproof-testnet-1</div>
  <h1 style="font-size:clamp(34px,4.6vw,56px);letter-spacing:-.03em;margin-top:12px">Every signature, <span class="g">in the open.</span></h1>
- <form class="search" id="sf"><input id="q" placeholder="Search block height, block hash, tx hash or lat1… address"><button class="btn pri">Search</button></form>
+ <form class="search" id="sf"><input id="q" placeholder="Search block height, block hash, tx hash or qpf1… address"><button class="btn pri">Search</button></form>
  <div id="view"></div>
 </main>
 <script src="/common.js"></script>
@@ -20,7 +20,7 @@
 chrome('/explorer');
 const V = document.getElementById('view'), J = (u) => fetch(u).then((r) => r.ok ? r.json() : null);
 document.getElementById('sf').onsubmit = (e) => { e.preventDefault(); const q = document.getElementById('q').value.trim(); if (!q) return;
-  go(/^lat1/.test(q) ? '/explorer/account/' + q : /^\d+$/.test(q) ? '/explorer/block/' + q : '/explorer/find/' + q); };
+  go(/^qpf1/.test(q) ? '/explorer/account/' + q : /^\d+$/.test(q) ? '/explorer/block/' + q : '/explorer/find/' + q); };
 function go(p) { history.pushState(0, '', p); route(); } addEventListener('popstate', route);
 document.addEventListener('click', (e) => { const a = e.target.closest('a[href^="/explorer"]'); if (a) { e.preventDefault(); go(a.getAttribute('href')); } });
 let timer;
@@ -32,18 +32,18 @@ async function home() { const [s, bs] = await Promise.all([J('/api/stats'), J('/
   for (const b of bs.slice(0, 8)) if (b.txCount) { const full = await J('/api/block/' + b.height); for (const t of full.txList) txs.push({ ...t, block: b.height, time: b.time }); }
   V.innerHTML = `<div class="kpis"><div class="card"><div class="lbl kick" style="color:var(--dim)">Height</div><div class="v">${s.height.toLocaleString()}</div></div><div class="card"><div class="kick" style="color:var(--dim)">PQ sigs verified</div><div class="v g">${s.sigsVerified.toLocaleString()}</div></div><div class="card"><div class="kick" style="color:var(--dim)">Transactions</div><div class="v">${s.totalTx.toLocaleString()}</div></div><div class="card"><div class="kick" style="color:var(--dim)">Mempool</div><div class="v">${s.mempool}</div></div></div>
   <div class="two"><div class="card"><h3>Latest blocks</h3><table><thead><tr><th>Block</th><th>Proposer</th><th>Txs</th><th>Sigs</th><th>Age</th></tr></thead><tbody>${bs.map((b) => `<tr><td><a class="l" href="/explorer/block/${b.height}">#${b.height}</a></td><td>${b.proposerName}</td><td>${b.txCount}</td><td class="ok">${b.sigs} ✓</td><td style="color:var(--dim)">${ago(b.time)}</td></tr>`).join('')}</tbody></table></div>
-  <div class="card"><h3>Latest transactions</h3><table><thead><tr><th>Hash</th><th>From → To</th><th style="text-align:right">tLATT</th></tr></thead><tbody>${txs.length ? txs.slice(0, 15).map((t) => `<tr><td><a class="l" href="/explorer/tx/${t.hash}">${short(t.hash, 8, 4)}</a></td><td><a href="/explorer/account/${t.from}">${short(t.from, 8, 4)}</a> → <a href="/explorer/account/${t.to}">${short(t.to, 8, 4)}</a></td><td style="text-align:right">${t.amount}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--dim)">No recent transactions. <a class="l" href="/wallet">Send one</a>.</td></tr>'}</tbody></table></div></div>`; }
+  <div class="card"><h3>Latest transactions</h3><table><thead><tr><th>Hash</th><th>From → To</th><th style="text-align:right">tQPF</th></tr></thead><tbody>${txs.length ? txs.slice(0, 15).map((t) => `<tr><td><a class="l" href="/explorer/tx/${t.hash}">${short(t.hash, 8, 4)}</a></td><td><a href="/explorer/account/${t.from}">${short(t.from, 8, 4)}</a> → <a href="/explorer/account/${t.to}">${short(t.to, 8, 4)}</a></td><td style="text-align:right">${t.amount}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--dim)">No recent transactions. <a class="l" href="/wallet">Send one</a>.</td></tr>'}</tbody></table></div></div>`; }
 async function block(h) { const b = await J('/api/block/' + h); if (!b) return V.innerHTML = '<div class="card det">Block not found.</div>';
   V.innerHTML = `<div class="card det"><h3 style="padding:0;font-size:24px">Block #${b.height.toLocaleString()}</h3><div class="kv">
   <span>Hash (SHA3-256)</span><span>${b.hash}</span><span>Parent</span><span>${b.height > 1 ? `<a class="l" href="/explorer/block/${b.height - 1}">${b.prev}</a>` : b.prev}</span><span>Time</span><span>${new Date(b.time).toLocaleString()} · ${ago(b.time)}</span>
-  <span>Proposer</span><span>${b.proposerName} · ${b.proposer}</span><span>Tx root</span><span>${b.txRoot}</span><span>Transactions</span><span>${b.txCount}</span><span>Fees</span><span>${b.fees} tLATT</span><span>Signature scheme</span><span class="ok">${b.alg} · ${(1 + b.attestations.length)} signatures, all verified</span></div>
+  <span>Proposer</span><span>${b.proposerName} · ${b.proposer}</span><span>Tx root</span><span>${b.txRoot}</span><span>Transactions</span><span>${b.txCount}</span><span>Fees</span><span>${b.fees} tQPF</span><span>Signature scheme</span><span class="ok">${b.alg} · ${(1 + b.attestations.length)} signatures, all verified</span></div>
   <h3 style="padding:26px 0 0">Proposer signature · ${(b.sig.length / 2).toLocaleString()} bytes</h3><div class="sig">${b.sig}</div>
   ${b.attestations.map((a) => `<h3 style="padding:18px 0 0">Attestation · ${a.name} <span class="ok">✓</span></h3><div class="sig">${a.sig}</div>`).join('')}
-  ${b.txList.length ? `<h3 style="padding:26px 0 8px">Transactions</h3><table><tbody>${b.txList.map((t) => `<tr><td><a class="l" href="/explorer/tx/${t.hash}">${short(t.hash)}</a></td><td>${short(t.from, 8, 4)} → ${short(t.to, 8, 4)}</td><td style="text-align:right">${t.amount} tLATT</td></tr>`).join('')}</tbody></table>` : ''}</div>`; }
+  ${b.txList.length ? `<h3 style="padding:26px 0 8px">Transactions</h3><table><tbody>${b.txList.map((t) => `<tr><td><a class="l" href="/explorer/tx/${t.hash}">${short(t.hash)}</a></td><td>${short(t.from, 8, 4)} → ${short(t.to, 8, 4)}</td><td style="text-align:right">${t.amount} tQPF</td></tr>`).join('')}</tbody></table>` : ''}</div>`; }
 async function tx(h) { const t = await J('/api/tx/' + h); if (!t) return V.innerHTML = '<div class="card det">Transaction not found yet. If you just sent it, it lands in the next block (≈4s).</div>';
-  V.innerHTML = `<div class="card det"><h3 style="padding:0;font-size:24px">Transaction</h3><div class="kv"><span>Hash</span><span>${t.hash}</span><span>Status</span><span class="ok">Finalized in block <a class="l" href="/explorer/block/${t.block}">#${t.block}</a></span><span>From</span><span><a class="l" href="/explorer/account/${t.from}">${t.from}</a></span><span>To</span><span><a class="l" href="/explorer/account/${t.to}">${t.to}</a></span><span>Amount</span><span>${t.amount} tLATT</span><span>Fee</span><span>${t.fee} tLATT</span><span>Nonce</span><span>${t.nonce}</span><span>Signature</span><span class="ok">ML-DSA-44 · ${t.sigBytes.toLocaleString()} bytes · verified at admission</span><span>Time</span><span>${new Date(t.time).toLocaleString()}</span></div></div>`; }
+  V.innerHTML = `<div class="card det"><h3 style="padding:0;font-size:24px">Transaction</h3><div class="kv"><span>Hash</span><span>${t.hash}</span><span>Status</span><span class="ok">Finalized in block <a class="l" href="/explorer/block/${t.block}">#${t.block}</a></span><span>From</span><span><a class="l" href="/explorer/account/${t.from}">${t.from}</a></span><span>To</span><span><a class="l" href="/explorer/account/${t.to}">${t.to}</a></span><span>Amount</span><span>${t.amount} tQPF</span><span>Fee</span><span>${t.fee} tQPF</span><span>Nonce</span><span>${t.nonce}</span><span>Signature</span><span class="ok">ML-DSA-44 · ${t.sigBytes.toLocaleString()} bytes · verified at admission</span><span>Time</span><span>${new Date(t.time).toLocaleString()}</span></div></div>`; }
 async function account(a) { const r = await J('/api/account/' + a);
-  V.innerHTML = `<div class="card det"><h3 style="padding:0;font-size:24px">Account</h3><div class="kv"><span>Address</span><span>${a}</span><span>Balance</span><span>${(+r.balance.toFixed(4)).toLocaleString()} tLATT</span><span>Nonce</span><span>${r.nonce}</span><span>Key type</span><span class="ok">${r.pubKnown ? 'ML-DSA-44 public key on record' : 'ML-DSA-44 (public key revealed on first send)'}</span><span>Transactions</span><span>${r.txs}</span></div>
+  V.innerHTML = `<div class="card det"><h3 style="padding:0;font-size:24px">Account</h3><div class="kv"><span>Address</span><span>${a}</span><span>Balance</span><span>${(+r.balance.toFixed(4)).toLocaleString()} tQPF</span><span>Nonce</span><span>${r.nonce}</span><span>Key type</span><span class="ok">${r.pubKnown ? 'ML-DSA-44 public key on record' : 'ML-DSA-44 (public key revealed on first send)'}</span><span>Transactions</span><span>${r.txs}</span></div>
   ${r.recent.length ? `<h3 style="padding:26px 0 8px">Recent</h3><table><tbody>${r.recent.map((t) => `<tr><td><a class="l" href="/explorer/block/${t.block}">#${t.block}</a></td><td><a class="l" href="/explorer/tx/${t.hash}">${short(t.hash)}</a></td><td>${t.from === a ? 'out → ' + short(t.to, 8, 4) : 'in ← ' + short(t.from, 8, 4)}</td><td style="text-align:right">${t.amount}</td></tr>`).join('')}</tbody></table>` : ''}</div>`; }
 route();
 </script></body></html>

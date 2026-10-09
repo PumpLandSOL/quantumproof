@@ -1,4 +1,4 @@
-// LATTICE testnet: a quantum-resistant L1. Every block, attestation and transaction is signed with
+// QuantumProof testnet: a quantum-resistant L1. Every block, attestation and transaction is signed with
 // ML-DSA (FIPS 204, lattice-based). Hashing is SHA3-256. Dependency-free Node 24+.
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
@@ -6,11 +6,11 @@ const PORT = +process.env.PORT || 8256;
 const DATA = process.env.DATA_PATH || path.join(__dirname, '..', 'data.json');
 const CLIENT = path.join(__dirname, '..', 'client');
 const SLOT_MS = 4000, FAUCET_AMT = 1000, FAUCET_COOLDOWN = 3600e3, FEE = 0.001, KEEP_BLOCKS = 4000;
-const LATT_MINT = process.env.LATT_MINT || '';
+const QPF_MINT = process.env.QPF_MINT || '';
 
 const sha3 = (b) => crypto.createHash('sha3-256').update(b).digest('hex');
 const canon = (o) => JSON.stringify(o, Object.keys(o).sort());
-const addrOf = (pubHex) => 'lat1' + sha3(Buffer.from(pubHex, 'hex')).slice(0, 40);
+const addrOf = (pubHex) => 'qpf1' + sha3(Buffer.from(pubHex, 'hex')).slice(0, 40);
 const pubKey = (hex, alg) => crypto.createPublicKey({ key: { kty: 'AKP', alg, pub: Buffer.from(hex, 'hex').toString('base64url') }, format: 'jwk' });
 const verify = (msg, pubHex, sigHex, alg) => { try { return crypto.verify(null, Buffer.from(msg), pubKey(pubHex, alg), Buffer.from(sigHex, 'hex')); } catch { return false; } };
 
@@ -32,11 +32,11 @@ let mempool = [];
 
 // ---------- transactions ----------
 // tx = { from, to, amount, nonce, fee, pub, sig } ; signed message = canon({from,to,amount,nonce,fee,chain})
-const CHAIN_ID = 'lattice-testnet-1';
+const CHAIN_ID = 'quantumproof-testnet-1';
 function txBody(t) { return canon({ amount: t.amount, chain: CHAIN_ID, fee: t.fee, from: t.from, nonce: t.nonce, to: t.to }); }
 function checkTx(t) {
   if (!t || typeof t !== 'object') return 'bad tx';
-  if (!/^lat1[0-9a-f]{40}$/.test(t.from || '') || !/^lat1[0-9a-f]{40}$/.test(t.to || '')) return 'bad address';
+  if (!/^qpf1[0-9a-f]{40}$/.test(t.from || '') || !/^qpf1[0-9a-f]{40}$/.test(t.to || '')) return 'bad address';
   if (!(t.amount > 0) || !isFinite(t.amount) || t.amount > 1e12) return 'bad amount';
   if (t.fee !== FEE) return 'fee must be ' + FEE;
   if (!/^[0-9a-f]{2624}$/.test(t.pub || '')) return 'pubkey must be an ML-DSA-44 key (1312 bytes)';
@@ -94,7 +94,7 @@ function stats() {
   const last = S.blocks.slice(-30); const span = last.length > 1 ? (last[last.length - 1].time - last[0].time) / 1000 : 1;
   return { chain: CHAIN_ID, height: S.height, totalTx: S.totalTx, accounts: Object.keys(S.accounts).length, sigsVerified: S.sigsVerified, mempool: mempool.length,
     tps: +(last.reduce((s, b) => s + b.txCount, 0) / span).toFixed(2), slotMs: SLOT_MS, validators: S.validators.map((v) => ({ name: v.name, addr: v.addr, produced: v.produced, pubBytes: v.pub.length / 2 })),
-    alg: { blocks: 'ML-DSA-65', tx: 'ML-DSA-44', hash: 'SHA3-256' }, sizes: { ed25519Sig: 64, mldsa44Sig: 2420, mldsa65Sig: 3309, mldsa44Pub: 1312 }, mint: LATT_MINT };
+    alg: { blocks: 'ML-DSA-65', tx: 'ML-DSA-44', hash: 'SHA3-256' }, sizes: { ed25519Sig: 64, mldsa44Sig: 2420, mldsa65Sig: 3309, mldsa44Pub: 1312 }, mint: QPF_MINT };
 }
 http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x'), p = u.pathname;
@@ -108,7 +108,7 @@ http.createServer(async (req, res) => {
       const recent = []; for (let i = S.blocks.length - 1; i >= 0 && recent.length < 25; i--) for (const t of S.blocks[i].txList || []) if (t.from === a || t.to === a) recent.push({ ...t, block: S.blocks[i].height, time: S.blocks[i].time });
       return send(res, 200, { address: a, balance: ac.bal, nonce: ac.nonce + pend, pubKnown: !!ac.pub, txs: ac.txs, recent }); }
     if (p === '/api/faucet' && req.method === 'POST') { const { address } = await body(req);
-      if (!/^lat1[0-9a-f]{40}$/.test(address || '')) return send(res, 400, { error: 'bad address' });
+      if (!/^qpf1[0-9a-f]{40}$/.test(address || '')) return send(res, 400, { error: 'bad address' });
       const last = S.faucet[address] || 0; if (Date.now() - last < FAUCET_COOLDOWN) return send(res, 429, { error: 'faucet cooldown', retryIn: Math.ceil((FAUCET_COOLDOWN - (Date.now() - last)) / 60000) + ' min' });
       S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT }); }
     if (p === '/api/tx' && req.method === 'POST') { const t = await body(req); t.fee = FEE; const err = checkTx(t); if (err) return send(res, 400, { error: err });
@@ -121,4 +121,4 @@ http.createServer(async (req, res) => {
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'content-type': MIME[path.extname(fp)] || 'application/octet-stream' }); fs.createReadStream(fp).pipe(res);
   } catch (e) { send(res, 500, { error: String(e.message || e) }); }
-}).listen(PORT, () => console.log('LATTICE testnet on :' + PORT, 'height', S.height));
+}).listen(PORT, () => console.log('QuantumProof testnet on :' + PORT, 'height', S.height));

@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LATTICE · Quantum-Resistant L1</title><meta name="description" content="LATTICE is a quantum-resistant layer 1. Every block, attestation and transaction is signed with ML-DSA (FIPS 204). Live testnet.">
+<title>QuantumProof · Quantum-Resistant L1</title><meta name="description" content="QuantumProof is a quantum-resistant layer 1. Every block, attestation and transaction is signed with ML-DSA (FIPS 204). Live testnet.">
 <link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
 <style>
 .hero{position:relative;min-height:calc(100vh - 68px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
@@ -42,9 +42,9 @@ h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-
 <header class="hero"><canvas id="net"></canvas><div class="wrap">
  <span class="pill"><span class="dot"></span>TESTNET LIVE · <span id="hh">…</span></span>
  <h1>The chain that<br><span class="g">survives Q-day.</span></h1>
- <p class="lead">LATTICE is a quantum-resistant layer 1. Every block, every validator vote and every transaction is signed with <b style="color:var(--tx)">ML-DSA</b>, the lattice-based NIST standard (FIPS 204) that Shor's algorithm can't break.</p>
+ <p class="lead">QuantumProof is a quantum-resistant layer 1. Every block, every validator vote and every transaction is signed with <b style="color:var(--tx)">ML-DSA</b>, the lattice-based NIST standard (FIPS 204) that Shor's algorithm can't break.</p>
  <div class="cta"><a class="btn pri" href="/wallet">Create a quantum-safe wallet →</a><a class="btn" href="/explorer">Open the explorer</a><a class="btn" href="/docs">Read the docs</a></div>
- <div class="ca" id="cabox"><span class="m" style="font-size:11px;color:var(--dim);letter-spacing:.14em">$LATT CA</span><code id="ca">launching on pump.fun</code><button class="btn" style="padding:7px 12px" onclick="copy(document.getElementById('ca').textContent)">Copy</button></div>
+ <div class="ca" id="cabox"><span class="m" style="font-size:11px;color:var(--dim);letter-spacing:.14em">$QPF CA</span><code id="ca">launching on pump.fun</code><button class="btn" style="padding:7px 12px" onclick="copy(document.getElementById('ca').textContent)">Copy</button></div>
 </div></header>
 
 <div class="strip">
@@ -66,9 +66,9 @@ h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-
    <div class="qrow"><span>Ethereum</span><b class="bad">ECDSA · secp256k1</b></div>
    <div class="qrow"><span>Solana</span><b class="bad">Ed25519</b></div>
    <div class="qrow"><span>NEAR</span><b class="bad">Ed25519</b></div>
-   <div class="qrow"><span>LATTICE · blocks</span><b class="good">ML-DSA-65</b></div>
-   <div class="qrow"><span>LATTICE · transactions</span><b class="good">ML-DSA-44</b></div>
-   <div class="qrow"><span>LATTICE · hashing</span><b class="good">SHA3-256</b></div>
+   <div class="qrow"><span>QuantumProof · blocks</span><b class="good">ML-DSA-65</b></div>
+   <div class="qrow"><span>QuantumProof · transactions</span><b class="good">ML-DSA-44</b></div>
+   <div class="qrow"><span>QuantumProof · hashing</span><b class="good">SHA3-256</b></div>
   </div>
  </div>
 </section>
@@ -86,12 +86,12 @@ h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-
 <section class="wrap">
  <div class="kick">// the cost of safety</div>
  <h2>Bigger signatures. <span class="g">Honest trade-off.</span></h2>
- <p class="sub">Post-quantum signatures are larger than elliptic-curve ones. LATTICE is built around that from day one instead of bolting it on later: blocks, gossip and storage are sized for ML-DSA.</p>
+ <p class="sub">Post-quantum signatures are larger than elliptic-curve ones. QuantumProof is built around that from day one instead of bolting it on later: blocks, gossip and storage are sized for ML-DSA.</p>
  <div class="card cmp">
   <div class="bar"><span>Ed25519 <span style="color:var(--dim)">(Solana)</span></span><div class="t" data-w="64" style="background:#3b322b"></div><span class="n">64 B</span></div>
   <div class="bar"><span>ECDSA <span style="color:var(--dim)">(BTC/ETH)</span></span><div class="t" data-w="65" style="background:#3b322b"></div><span class="n">65 B</span></div>
-  <div class="bar"><span>ML-DSA-44 <span style="color:var(--dim)">(LATTICE tx)</span></span><div class="t" data-w="2420" style="background:linear-gradient(90deg,#ffb347,#ff7a18)"></div><span class="n">2,420 B</span></div>
-  <div class="bar"><span>ML-DSA-65 <span style="color:var(--dim)">(LATTICE blocks)</span></span><div class="t" data-w="3309" style="background:linear-gradient(90deg,#ff7a18,#ff3d00)"></div><span class="n">3,309 B</span></div>
+  <div class="bar"><span>ML-DSA-44 <span style="color:var(--dim)">(QuantumProof tx)</span></span><div class="t" data-w="2420" style="background:linear-gradient(90deg,#ffb347,#ff7a18)"></div><span class="n">2,420 B</span></div>
+  <div class="bar"><span>ML-DSA-65 <span style="color:var(--dim)">(QuantumProof blocks)</span></span><div class="t" data-w="3309" style="background:linear-gradient(90deg,#ff7a18,#ff3d00)"></div><span class="n">3,309 B</span></div>
   <p class="m" style="color:var(--dim);font-size:12px;margin-top:18px">Signature sizes per FIPS 204 and RFC 8032. Quantum security: Ed25519/ECDSA → broken by Shor · ML-DSA-44 → NIST level 2 · ML-DSA-65 → NIST level 3.</p>
  </div>
 </section>
@@ -100,7 +100,7 @@ h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-
  <div class="kick">// how it works</div>
  <h2>Three layers, <span class="g">zero elliptic curves.</span></h2>
  <div class="three">
-  <div class="card"><div class="num">01</div><h3>Lattice keys in your browser</h3><p>Your wallet generates an ML-DSA-44 keypair locally. The secret key never leaves your device. Your address is a SHA3-256 hash of the public key.</p><code>addr = "lat1" ‖ SHA3-256(pk)[0..20]</code></div>
+  <div class="card"><div class="num">01</div><h3>Lattice keys in your browser</h3><p>Your wallet generates an ML-DSA-44 keypair locally. The secret key never leaves your device. Your address is a SHA3-256 hash of the public key.</p><code>addr = "qpf1" ‖ SHA3-256(pk)[0..20]</code></div>
   <div class="card"><div class="num">02</div><h3>Verified at the gate</h3><p>Every transaction carries its 1,312-byte public key and 2,420-byte signature. The node verifies it against FIPS 204 before it touches the mempool.</p><code>verify(ML-DSA-44, pk, canon(tx), σ)</code></div>
   <div class="card"><div class="num">03</div><h3>Quantum-safe consensus</h3><p>Proposers rotate round-robin. A block is final when the proposer plus at least two attesters sign its SHA3-256 header hash with ML-DSA-65.</p><code>final ⇔ 1 + ≥2 valid ML-DSA-65 sigs</code></div>
  </div>
@@ -113,9 +113,9 @@ h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-
 </section>
 
 <section class="final wrap">
- <div class="kick">// $LATT</div>
+ <div class="kick">// $QPF</div>
  <h2>Move before Q-day. <span class="g">Hold the chain built for it.</span></h2>
- <div class="cta" style="justify-content:center"><a class="btn pri" href="/wallet">Get testnet tLATT →</a><a class="btn" href="/docs">How LATTICE works</a></div>
+ <div class="cta" style="justify-content:center"><a class="btn pri" href="/wallet">Get testnet tQPF →</a><a class="btn" href="/docs">How QuantumProof works</a></div>
 </section>
 
 <script src="/common.js"></script>
