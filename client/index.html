@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LATTICE · Quantum-Resistant L1</title><meta name="description" content="LATTICE is a quantum-resistant layer 1. Every block, attestation and transaction is signed with ML-DSA (FIPS 204). Live testnet.">
+<link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<style>
+.hero{position:relative;min-height:calc(100vh - 68px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
+#net{position:absolute;inset:0;width:100%;height:100%}
+.hero .wrap{position:relative;z-index:2;width:100%}
+.hero h1{font-size:clamp(46px,7.4vw,104px);line-height:.96;letter-spacing:-.035em;font-weight:700;max-width:980px;margin:26px 0 26px}
+.hero p.lead{font-size:clamp(17px,1.6vw,21px);color:var(--mu);max-width:640px;line-height:1.55}
+.cta{display:flex;gap:12px;margin-top:36px;flex-wrap:wrap}
+.ca{display:flex;align-items:center;gap:12px;margin-top:26px;padding:10px 10px 10px 16px;border:1px solid var(--line2);border-radius:12px;background:rgba(10,7,5,.8);width:fit-content;max-width:100%}
+.ca code{font-family:'JetBrains Mono';font-size:13px;color:var(--or2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--line);background:var(--bg2)}
+.strip>div{padding:26px 28px;border-right:1px solid var(--line)}.strip>div:last-child{border:0}
+.strip .k{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}.strip .v{font-size:30px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums}
+section{padding:110px 0 0}
+h2{font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.03em;font-weight:700;margin-top:16px;max-width:900px}
+.sub{color:var(--mu);font-size:18px;line-height:1.6;max-width:680px;margin-top:20px}
+.threat{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:54px}
+.clock{padding:40px}.clock .big{font-size:clamp(54px,7vw,92px);font-weight:700;letter-spacing:-.04em;line-height:1}
+.qrow{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line);font-size:15px}.qrow:last-child{border:0}.qrow b{font-family:'JetBrains Mono';font-weight:500}
+.bad{color:#ff5a4d}.good{color:var(--ok)}
+.feed{display:grid;grid-template-columns:1fr 380px;gap:28px;margin-top:54px}
+.chainviz{height:250px;position:relative;overflow:hidden;padding:0}
+.chainviz canvas{width:100%;height:100%;display:block}
+.blk{display:grid;grid-template-columns:90px 1fr auto;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono';font-size:13px;align-items:center}
+.blk:last-child{border:0}.blk .h{color:var(--or2)}.blk .s{color:var(--dim);font-size:12px}
+.blk.new{animation:fl 1.4s}
+.cmp{margin-top:54px;padding:40px}
+.bar{display:grid;grid-template-columns:230px 1fr 110px;gap:18px;align-items:center;padding:12px 0}
+.bar .t{height:30px;border-radius:7px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.bar .n{font-family:'JetBrains Mono';font-size:13px;text-align:right}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:54px}
+.three .card{padding:32px}.three .num{font-family:'JetBrains Mono';color:var(--or);font-size:13px}.three h3{font-size:24px;margin:16px 0 12px;letter-spacing:-.01em}.three p{color:var(--mu);line-height:1.6;font-size:15px}
+.three code{display:block;margin-top:18px;font-family:'JetBrains Mono';font-size:12px;color:var(--or2);background:#0a0705;border:1px solid var(--line);padding:10px 12px;border-radius:8px}
+.vals{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:54px}
+.val{padding:24px}.val .nm{font-size:20px;font-weight:600}.val .ad{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);margin-top:6px}.val .pr{font-family:'JetBrains Mono';font-size:28px;margin-top:18px}
+.val.on{border-color:var(--or);box-shadow:0 0 34px rgba(255,122,24,.22)}
+.final{text-align:center;padding:120px 0 20px}.final h2{margin:16px auto 0}
+@media(max-width:900px){.strip{grid-template-columns:repeat(2,1fr)}.threat,.feed,.three,.vals{grid-template-columns:1fr}.bar{grid-template-columns:120px 1fr 80px}}
+</style></head><body>
+<header class="hero"><canvas id="net"></canvas><div class="wrap">
+ <span class="pill"><span class="dot"></span>TESTNET LIVE · <span id="hh">…</span></span>
+ <h1>The chain that<br><span class="g">survives Q-day.</span></h1>
+ <p class="lead">LATTICE is a quantum-resistant layer 1. Every block, every validator vote and every transaction is signed with <b style="color:var(--tx)">ML-DSA</b>, the lattice-based NIST standard (FIPS 204) that Shor's algorithm can't break.</p>
+ <div class="cta"><a class="btn pri" href="/wallet">Create a quantum-safe wallet →</a><a class="btn" href="/explorer">Open the explorer</a><a class="btn" href="/docs">Read the docs</a></div>
+ <div class="ca" id="cabox"><span class="m" style="font-size:11px;color:var(--dim);letter-spacing:.14em">$LATT CA</span><code id="ca">launching on pump.fun</code><button class="btn" style="padding:7px 12px" onclick="copy(document.getElementById('ca').textContent)">Copy</button></div>
+</div></header>
+
+<div class="strip">
+ <div><div class="k">Block height</div><div class="v" id="s_h">—</div></div>
+ <div><div class="k">PQ signatures verified</div><div class="v g" id="s_sig">—</div></div>
+ <div><div class="k">Transactions</div><div class="v" id="s_tx">—</div></div>
+ <div><div class="k">Accounts</div><div class="v" id="s_ac">—</div></div>
+ <div><div class="k">Slot time</div><div class="v">4.0s</div></div>
+</div>
+
+<section class="wrap" id="threat">
+ <div class="kick">// the threat</div>
+ <h2>Every chain you hold today signs with math a quantum computer <span class="g">breaks.</span></h2>
+ <p class="sub">Bitcoin, Ethereum and Solana all rely on elliptic-curve signatures. Shor's algorithm solves the elliptic-curve discrete log in polynomial time. Once your public key is on-chain, a large enough quantum machine can derive your private key from it.</p>
+ <div class="threat">
+  <div class="card clock"><div class="kick" style="color:var(--dim)">Harvest now, decrypt later</div><div class="big g" style="margin-top:20px">Already<br>started.</div><p class="sub" style="font-size:16px">Adversaries can record signed transactions and exposed public keys today and break them the day the hardware arrives. Migration has to happen before Q-day, not after.</p></div>
+  <div class="card" style="padding:30px 36px">
+   <div class="qrow"><span>Bitcoin</span><b class="bad">ECDSA / Schnorr · secp256k1</b></div>
+   <div class="qrow"><span>Ethereum</span><b class="bad">ECDSA · secp256k1</b></div>
+   <div class="qrow"><span>Solana</span><b class="bad">Ed25519</b></div>
+   <div class="qrow"><span>NEAR</span><b class="bad">Ed25519</b></div>
+   <div class="qrow"><span>LATTICE · blocks</span><b class="good">ML-DSA-65</b></div>
+   <div class="qrow"><span>LATTICE · transactions</span><b class="good">ML-DSA-44</b></div>
+   <div class="qrow"><span>LATTICE · hashing</span><b class="good">SHA3-256</b></div>
+  </div>
+ </div>
+</section>
+
+<section class="wrap">
+ <div class="kick">// live</div>
+ <h2>Not a whitepaper. <span class="g">A running chain.</span></h2>
+ <p class="sub">Four validators rotate block production every 4 seconds. Each block is signed by its proposer and attested by the other three, every signature ML-DSA-65, and each one is checked before the block is accepted.</p>
+ <div class="feed">
+  <div class="card chainviz"><canvas id="cv"></canvas></div>
+  <div class="card" id="blocks" style="overflow:hidden"></div>
+ </div>
+</section>
+
+<section class="wrap">
+ <div class="kick">// the cost of safety</div>
+ <h2>Bigger signatures. <span class="g">Honest trade-off.</span></h2>
+ <p class="sub">Post-quantum signatures are larger than elliptic-curve ones. LATTICE is built around that from day one instead of bolting it on later: blocks, gossip and storage are sized for ML-DSA.</p>
+ <div class="card cmp">
+  <div class="bar"><span>Ed25519 <span style="color:var(--dim)">(Solana)</span></span><div class="t" data-w="64" style="background:#3b322b"></div><span class="n">64 B</span></div>
+  <div class="bar"><span>ECDSA <span style="color:var(--dim)">(BTC/ETH)</span></span><div class="t" data-w="65" style="background:#3b322b"></div><span class="n">65 B</span></div>
+  <div class="bar"><span>ML-DSA-44 <span style="color:var(--dim)">(LATTICE tx)</span></span><div class="t" data-w="2420" style="background:linear-gradient(90deg,#ffb347,#ff7a18)"></div><span class="n">2,420 B</span></div>
+  <div class="bar"><span>ML-DSA-65 <span style="color:var(--dim)">(LATTICE blocks)</span></span><div class="t" data-w="3309" style="background:linear-gradient(90deg,#ff7a18,#ff3d00)"></div><span class="n">3,309 B</span></div>
+  <p class="m" style="color:var(--dim);font-size:12px;margin-top:18px">Signature sizes per FIPS 204 and RFC 8032. Quantum security: Ed25519/ECDSA → broken by Shor · ML-DSA-44 → NIST level 2 · ML-DSA-65 → NIST level 3.</p>
+ </div>
+</section>
+
+<section class="wrap">
+ <div class="kick">// how it works</div>
+ <h2>Three layers, <span class="g">zero elliptic curves.</span></h2>
+ <div class="three">
+  <div class="card"><div class="num">01</div><h3>Lattice keys in your browser</h3><p>Your wallet generates an ML-DSA-44 keypair locally. The secret key never leaves your device. Your address is a SHA3-256 hash of the public key.</p><code>addr = "lat1" ‖ SHA3-256(pk)[0..20]</code></div>
+  <div class="card"><div class="num">02</div><h3>Verified at the gate</h3><p>Every transaction carries its 1,312-byte public key and 2,420-byte signature. The node verifies it against FIPS 204 before it touches the mempool.</p><code>verify(ML-DSA-44, pk, canon(tx), σ)</code></div>
+  <div class="card"><div class="num">03</div><h3>Quantum-safe consensus</h3><p>Proposers rotate round-robin. A block is final when the proposer plus at least two attesters sign its SHA3-256 header hash with ML-DSA-65.</p><code>final ⇔ 1 + ≥2 valid ML-DSA-65 sigs</code></div>
+ </div>
+</section>
+
+<section class="wrap">
+ <div class="kick">// validator set</div>
+ <h2>Four validators, <span class="g">four lattice keys.</span></h2>
+ <div class="vals" id="vals"></div>
+</section>
+
+<section class="final wrap">
+ <div class="kick">// $LATT</div>
+ <h2>Move before Q-day. <span class="g">Hold the chain built for it.</span></h2>
+ <div class="cta" style="justify-content:center"><a class="btn pri" href="/wallet">Get testnet tLATT →</a><a class="btn" href="/docs">How LATTICE works</a></div>
+</section>
+
+<script src="/common.js"></script>
+<script>
+chrome('/');
+// hero lattice: a hex lattice with nodes that light up as blocks land
+const net = document.getElementById('net'), nx = net.getContext('2d'); let NW, NH, pts = [], pulse = 0;
+function rs() { NW = net.width = net.clientWidth * devicePixelRatio; NH = net.height = net.clientHeight * devicePixelRatio; pts = []; const s = 62 * devicePixelRatio;
+  for (let y = -1; y < NH / (s * .866) + 2; y++) for (let x = -1; x < NW / s + 2; x++) pts.push({ x: x * s + (y % 2 ? s / 2 : 0), y: y * s * .866, p: Math.random() * 6.28, h: 0 }); }
+addEventListener('resize', rs); rs();
+function drawNet(t) { nx.clearRect(0, 0, NW, NH); const s = 62 * devicePixelRatio;
+  for (const a of pts) { a.ox = a.x + Math.sin(t / 1400 + a.p) * 6; a.oy = a.y + Math.cos(t / 1700 + a.p) * 6; a.h *= .965; }
+  nx.lineWidth = devicePixelRatio;
+  for (let i = 0; i < pts.length; i++) { const a = pts[i]; const fx = a.ox / NW; const fade = Math.min(1, Math.max(0, fx - .12) * 1.6);
+    for (let j = i + 1; j < Math.min(pts.length, i + 60); j++) { const b = pts[j]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (d > s * 1.05) continue;
+      const h = Math.max(a.h, b.h); nx.strokeStyle = `rgba(255,${122 + h * 80},${24 + h * 40},${(.16 + h * .8) * fade})`; nx.beginPath(); nx.moveTo(a.ox, a.oy); nx.lineTo(b.ox, b.oy); nx.stroke(); }
+    nx.fillStyle = `rgba(255,${150 + a.h * 90},60,${(.45 + a.h) * fade})`; nx.beginPath(); nx.arc(a.ox, a.oy, (1.6 + a.h * 3) * devicePixelRatio, 0, 7); nx.fill(); }
+  requestAnimationFrame(drawNet); }
+requestAnimationFrame(drawNet);
+function ignite() { const c = pts[Math.floor(Math.random() * pts.length)]; for (const p of pts) { const d = Math.hypot(p.x - c.x, p.y - c.y); if (d < 260 * devicePixelRatio) p.h = Math.max(p.h, 1 - d / (260 * devicePixelRatio)); } }
+
+// chain viz: blocks slide in as a linked chain with signature ticks
+const cv = document.getElementById('cv'), cx = cv.getContext('2d'); let chain = [];
+function drawChain() { const W = cv.width = cv.clientWidth * devicePixelRatio, H = cv.height = cv.clientHeight * devicePixelRatio, d = devicePixelRatio; cx.clearRect(0, 0, W, H);
+  const bw = 118 * d, gap = 34 * d, y = H / 2 - 50 * d; const now = performance.now();
+  chain.forEach((b, i) => { const k = chain.length - 1 - i; const age = Math.min(1, (now - b.at) / 700); const x = W - 40 * d - bw - k * (bw + gap) + (1 - age) * 80 * d; if (x < -bw) return;
+    if (i > 0) { cx.strokeStyle = 'rgba(255,122,24,.5)'; cx.lineWidth = 2 * d; cx.beginPath(); cx.moveTo(x - gap, y + 50 * d); cx.lineTo(x, y + 50 * d); cx.stroke(); }
+    cx.globalAlpha = age; cx.fillStyle = k === 0 ? 'rgba(255,122,24,.16)' : 'rgba(255,122,24,.05)'; cx.strokeStyle = k === 0 ? '#ff7a18' : 'rgba(255,122,24,.35)'; cx.lineWidth = 1.5 * d;
+    cx.beginPath(); cx.roundRect(x, y, bw, 100 * d, 12 * d); cx.fill(); cx.stroke();
+    cx.fillStyle = '#f5efe8'; cx.font = `600 ${15 * d}px Space Grotesk`; cx.fillText('#' + b.height, x + 14 * d, y + 28 * d);
+    cx.fillStyle = '#a3968a'; cx.font = `${11 * d}px JetBrains Mono`; cx.fillText(b.hash.slice(0, 10) + '…', x + 14 * d, y + 50 * d); cx.fillText(b.proposerName, x + 14 * d, y + 68 * d);
+    for (let s = 0; s < b.sigs; s++) { const on = (now - b.at) > 250 + s * 180; cx.fillStyle = on ? '#4dff9a' : 'rgba(255,255,255,.12)'; cx.beginPath(); cx.arc(x + 20 * d + s * 16 * d, y + 86 * d, 4.5 * d, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1; });
+  cx.fillStyle = '#5e544b'; cx.font = `${11 * d}px JetBrains Mono`; cx.fillText('● = ML-DSA-65 signature verified', 18 * d, H - 18 * d);
+  requestAnimationFrame(drawChain); }
+requestAnimationFrame(drawChain);
+
+const bl = document.getElementById('blocks');
+function row(b, fresh) { return `<a href="/explorer/block/${b.height}" class="blk ${fresh ? 'new' : ''}"><span class="h">#${b.height.toLocaleString()}</span><span><span class="mono-trunc" style="max-width:150px">${b.hash}</span><br><span class="s">${b.proposerName} · ${b.txCount} tx · ${b.sigs} PQ sigs</span></span><span class="s">${ago(b.time)}</span></a>`; }
+async function load() { const bs = await (await fetch('/api/blocks?n=6')).json(); bl.innerHTML = bs.map((b) => row(b)).join(''); chain = bs.slice().reverse().map((b) => ({ ...b, at: 0 })); }
+async function stats() { const s = await (await fetch('/api/stats')).json();
+  document.getElementById('s_h').textContent = s.height.toLocaleString(); document.getElementById('s_sig').textContent = s.sigsVerified.toLocaleString();
+  document.getElementById('s_tx').textContent = s.totalTx.toLocaleString(); document.getElementById('s_ac').textContent = s.accounts.toLocaleString(); document.getElementById('hh').textContent = 'block #' + s.height.toLocaleString();
+  if (s.mint) document.getElementById('ca').textContent = s.mint;
+  const cur = (s.height) % 4; document.getElementById('vals').innerHTML = s.validators.map((v, i) => `<div class="card val ${i === cur ? 'on' : ''}"><div class="nm">${v.name}</div><div class="ad">${short(v.addr, 10, 6)}</div><div class="pr">${v.produced.toLocaleString()}</div><div class="m" style="font-size:11px;color:var(--dim)">blocks proposed · ${v.pubBytes.toLocaleString()} B ML-DSA-65 key</div></div>`).join(''); }
+load(); stats(); setInterval(stats, 4000);
+const es = new EventSource('/api/live'); es.onmessage = (m) => { const b = JSON.parse(m.data); bl.insertAdjacentHTML('afterbegin', row(b, 1)); while (bl.children.length > 6) bl.lastChild.remove(); chain.push({ ...b, at: performance.now() }); if (chain.length > 12) chain.shift(); ignite(); };
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) e.target.querySelectorAll('.t').forEach((t) => t.style.width = Math.max(1.2, +t.dataset.w / 3309 * 100) + '%'); }), { threshold: .3 });
+io.observe(document.querySelector('.cmp'));
+</script></body></html>

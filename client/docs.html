@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LATTICE Docs</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<style>
+.doc{display:grid;grid-template-columns:220px 1fr;gap:56px;padding-top:50px}
+.toc{position:sticky;top:96px;align-self:start;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--mu)}.toc a:hover{color:var(--or)}
+article h2{font-size:32px;letter-spacing:-.02em;margin:58px 0 14px;scroll-margin-top:90px}article h2:first-of-type{margin-top:0}
+article p,article li{color:var(--mu);line-height:1.75;font-size:16px;margin-top:12px}article b{color:var(--tx)}article ul{padding-left:20px}
+article pre{background:#0a0705;border:1px solid var(--line);border-radius:10px;padding:16px 18px;font-family:'JetBrains Mono';font-size:13px;color:var(--or2);overflow-x:auto;margin-top:16px;line-height:1.7}
+article table{margin-top:16px}
+.faq{border-top:1px solid var(--line);padding:18px 0}.faq b{display:block;font-size:17px}
+@media(max-width:900px){.doc{grid-template-columns:1fr}.toc{display:none}}
+</style></head><body>
+<main class="wrap doc"><nav class="toc"><span class="kick">Docs</span><a href="#what">What is LATTICE</a><a href="#why">Why quantum resistance</a><a href="#crypto">Cryptography</a><a href="#consensus">Consensus</a><a href="#tx">Transactions</a><a href="#wallet">Wallet</a><a href="#api">Node API</a><a href="#token">$LATT</a><a href="#faq">FAQ</a></nav>
+<article>
+<h2 id="what">What is LATTICE</h2>
+<p>LATTICE is a layer-1 blockchain where <b>no elliptic-curve cryptography is used anywhere</b>. Blocks, validator attestations and user transactions are all signed with ML-DSA, the lattice-based digital signature standard NIST published as FIPS 204 in August 2024. Hashing is SHA3-256.</p>
+<p>The testnet (<b>lattice-testnet-1</b>) is live: blocks every 4 seconds, a public explorer, a browser wallet and a faucet.</p>
+<h2 id="why">Why quantum resistance</h2>
+<p>Bitcoin and Ethereum sign with ECDSA/Schnorr over secp256k1; Solana and NEAR use Ed25519. All of them rest on the elliptic-curve discrete-log problem, which Shor's algorithm solves efficiently on a large fault-tolerant quantum computer. Once a public key is visible on-chain, such a machine could derive the private key.</p>
+<p>Signed data recorded today stays on-chain forever, so the risk is "harvest now, break later". Moving to post-quantum signatures has to happen before that hardware exists.</p>
+<h2 id="crypto">Cryptography</h2>
+<table><thead><tr><th>Use</th><th>Scheme</th><th>Public key</th><th>Signature</th><th>NIST level</th></tr></thead><tbody>
+<tr><td>User transactions</td><td>ML-DSA-44</td><td>1,312 B</td><td>2,420 B</td><td>2</td></tr>
+<tr><td>Blocks &amp; attestations</td><td>ML-DSA-65</td><td>1,952 B</td><td>3,309 B</td><td>3</td></tr>
+<tr><td>Hashes, addresses, tx root</td><td>SHA3-256</td><td>—</td><td>—</td><td>—</td></tr></tbody></table>
+<p>ML-DSA's security rests on the Module-LWE and Module-SIS lattice problems, for which no efficient quantum algorithm is known. Node signatures use the platform's native FIPS 204 implementation; browser wallets use the audited open-source <b>@noble/post-quantum</b> library. Both produce standard-encoded keys and signatures, so a wallet signature is verified natively by the node.</p>
+<h2 id="consensus">Consensus</h2>
+<p>Four validators (Kyber, Dilithium, Falcon, Sphincs) each hold an ML-DSA-65 key. Proposers rotate round-robin each 4-second slot.</p>
+<pre>header = { height, prev, time, txRoot, proposer, txCount }
+hash   = SHA3-256(canonical(header))
+block  = header + ML-DSA-65 proposer sig + attestations
+final  ⇔ proposer sig valid AND ≥ 2 of 3 attestations valid</pre>
+<p>Every signature is verified before the block is appended; a block that fails is dropped and its transactions return to the mempool. Fees go to the block's proposer.</p>
+<h2 id="tx">Transactions</h2>
+<pre>body = canonical({ amount, chain:"lattice-testnet-1", fee, from, nonce, to })
+sig  = ML-DSA-44.sign(sk, body)
+tx   = body + pub (1,312 B) + sig (2,420 B)</pre>
+<ul><li>The node checks that SHA3-256(pub) matches the <b>from</b> address, then verifies the signature against the body.</li><li>The nonce must equal the account's next nonce, which stops replays.</li><li>The <b>chain</b> field binds the signature to this network.</li><li>Network fee: 0.001 tLATT.</li></ul>
+<h2 id="wallet">Wallet</h2>
+<p>The wallet at <a href="/wallet" style="color:var(--or)">/wallet</a> generates a 32-byte random seed with the browser's secure RNG and derives an ML-DSA-44 keypair from it. The seed is stored only in this browser; back it up with <b>Reveal seed</b>. Addresses look like:</p>
+<pre>lat1 + first 20 bytes of SHA3-256(public key)  →  lat1c0ffee…</pre>
+<p>The faucet credits 1,000 tLATT per address per hour.</p>
+<h2 id="api">Node API</h2>
+<pre>GET  /api/stats              chain stats, validators, algorithms
+GET  /api/blocks?n=20        latest blocks
+GET  /api/block/:height|hash full block incl. every signature
+GET  /api/tx/:hash           transaction
+GET  /api/account/:lat1…     balance, nonce, history
+POST /api/tx                 submit signed transaction
+POST /api/faucet             { address }
+GET  /api/live               server-sent events, one per block</pre>
+<h2 id="token">$LATT</h2>
+<p>$LATT is the LATTICE community token, launched on pump.fun (Solana). The contract address is shown on the front page with a copy button. tLATT is the testnet gas asset; it is separate from $LATT.</p>
+<h2 id="faq">FAQ</h2>
+<div class="faq"><b>Is quantum resistance real or marketing?</b><p>Real. ML-DSA is a published NIST standard and every signature on this network is one. Open any block in the explorer to see the full ML-DSA-65 signatures and their byte sizes.</p></div>
+<div class="faq"><b>Why are signatures so much bigger?</b><p>Lattice signatures trade size for quantum security: 2,420 bytes versus 64 for Ed25519. LATTICE is designed around that size from the start.</p></div>
+<div class="faq"><b>Does the server ever see my key?</b><p>No. Keys are generated and used in your browser. The node only receives your public key and signature.</p></div>
+<div class="faq"><b>Is this mainnet?</b><p>No. This is lattice-testnet-1; tLATT has no monetary value.</p></div>
+<div class="faq"><b>Why ML-DSA and not SPHINCS+ or Falcon?</b><p>ML-DSA is NIST's primary general-purpose signature standard, with fast signing and verification. SLH-DSA (SPHINCS+) signatures are larger and slower; Falcon needs delicate floating-point sampling.</p></div>
+</article></main>
+<script src="/common.js"></script><script>chrome('/docs')</script></body></html>

@@ -1,0 +1,94 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LATTICE Wallet</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<style>
+.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:24px;margin-top:40px}
+.pane{padding:30px}.lbl{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-bottom:8px}
+.bal{font-size:64px;font-weight:700;letter-spacing:-.03em;margin:8px 0 4px;font-variant-numeric:tabular-nums}
+.addr{display:flex;gap:10px;align-items:center;font-family:'JetBrains Mono';font-size:13px;color:var(--or2);word-break:break-all}
+.row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.f{margin-top:16px}
+.log{margin-top:18px;font-family:'JetBrains Mono';font-size:12px;color:var(--mu);line-height:1.8;min-height:20px}
+.log .ok{color:var(--ok)}.log .er{color:#ff5a4d}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.keys div{background:#0a0705;border:1px solid var(--line);border-radius:10px;padding:14px}.keys b{display:block;font-family:'JetBrains Mono';font-size:20px;margin-top:4px}
+#empty{text-align:center;padding:70px 30px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.bal{font-size:44px}}
+</style></head><body>
+<main class="wrap" style="padding-top:56px">
+ <div class="kick">// wallet</div>
+ <h1 style="font-size:clamp(36px,5vw,62px);letter-spacing:-.03em;margin-top:12px">Your <span class="g">quantum-safe</span> wallet.</h1>
+ <p style="color:var(--mu);margin-top:14px;max-width:640px;line-height:1.6">Keys are ML-DSA-44 (FIPS 204), generated in this browser. The secret never leaves your device. Every transfer is signed locally and verified by the network before it enters a block.</p>
+
+ <div class="card" id="empty" style="margin-top:40px">
+
+  <h2 style="font-size:30px">No wallet on this device yet</h2>
+  <p style="color:var(--mu);margin:12px auto 26px;max-width:460px">Generate a fresh lattice keypair. It takes a split second, and nothing is sent to the server.</p>
+  <div class="row" style="justify-content:center"><button class="btn pri" id="gen">Generate ML-DSA wallet</button><button class="btn" id="imp">Import seed</button></div>
+  <div class="log" id="glog"></div>
+ </div>
+
+ <div class="grid" id="main" style="display:none">
+  <div>
+   <div class="card pane">
+    <div class="lbl">Balance · testnet</div><div class="bal"><span id="bal">0</span> <span class="g" style="font-size:.5em">tLATT</span></div>
+    <div class="addr"><span id="addr"></span><button class="btn" style="padding:6px 10px;font-size:12px" onclick="copy(W.addr)">Copy</button></div>
+    <div class="row"><button class="btn pri" id="fau">Claim 1,000 tLATT</button><a class="btn" id="exl">View in explorer</a></div>
+    <div class="log" id="flog"></div>
+    <div class="keys"><div><span class="lbl">Public key</span><b>1,312 B</b></div><div><span class="lbl">Signature</span><b>2,420 B</b></div><div><span class="lbl">Scheme</span><b class="g">ML-DSA-44</b></div></div>
+   </div>
+   <div class="card pane" style="margin-top:24px">
+    <div class="lbl">Recent activity</div>
+    <table><thead><tr><th>Block</th><th>Type</th><th>Counterparty</th><th style="text-align:right">Amount</th></tr></thead><tbody id="hist"><tr><td colspan="4" style="color:var(--dim)">No transactions yet.</td></tr></tbody></table>
+   </div>
+  </div>
+  <div>
+   <div class="card pane">
+    <div class="lbl">Send</div>
+    <div class="f"><input id="to" placeholder="lat1… recipient address"></div>
+    <div class="f"><input id="amt" type="number" min="0" step="any" placeholder="Amount (tLATT)"></div>
+    <p class="m" style="font-size:12px;color:var(--dim);margin-top:12px">Network fee 0.001 tLATT · signed with your ML-DSA-44 key</p>
+    <div class="row"><button class="btn pri" id="send" style="flex:1;justify-content:center">Sign &amp; send</button></div>
+    <div class="log" id="slog"></div>
+   </div>
+   <div class="card pane" style="margin-top:24px">
+    <div class="lbl">Backup</div>
+    <p style="color:var(--mu);font-size:14px;line-height:1.6">Your wallet is derived from a 32-byte seed. Save it somewhere safe; anyone with the seed controls the wallet.</p>
+    <div class="row"><button class="btn" id="show">Reveal seed</button><button class="btn" id="forget">Remove from this device</button></div>
+    <div class="log m" id="seedbox" style="word-break:break-all;color:var(--or2)"></div>
+   </div>
+  </div>
+ </div>
+</main>
+<script src="/common.js"></script>
+<script type="module">
+import { ml_dsa44 } from 'https://cdn.jsdelivr.net/npm/@noble/post-quantum@0.2.1/ml-dsa.js/+esm';
+chrome('/wallet');
+const hex = (u) => [...u].map((b) => b.toString(16).padStart(2, '0')).join(''), unhex = (h) => new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16)));
+const sha3 = async (u) => { const { sha3_256 } = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.5.0/sha3.js/+esm'); return hex(sha3_256(u)); };
+const canon = (o) => JSON.stringify(o, Object.keys(o).sort());
+const $ = (i) => document.getElementById(i), log = (id, m, c = '') => { $(id).innerHTML = `<div class="${c}">${m}</div>`; };
+window.W = null;
+function getSeed() { try { return localStorage.getItem('latt_seed'); } catch { return null; } }
+async function open(seedHex) {
+  const k = ml_dsa44.keygen(unhex(seedHex)); const pub = hex(k.publicKey);
+  W = { seed: seedHex, sk: k.secretKey, pub, addr: 'lat1' + (await sha3(k.publicKey)).slice(0, 40) };
+  $('empty').style.display = 'none'; $('main').style.display = ''; $('addr').textContent = W.addr; $('exl').href = '/explorer/account/' + W.addr; refresh();
+}
+async function refresh() { if (!W) return; const a = await (await fetch('/api/account/' + W.addr)).json(); W.nonce = a.nonce; $('bal').textContent = (+a.balance.toFixed(4)).toLocaleString();
+  $('hist').innerHTML = a.recent.length ? a.recent.map((t) => { const out = t.from === W.addr; return `<tr><td><a href="/explorer/block/${t.block}" style="color:var(--or2)">#${t.block}</a></td><td>${out ? 'sent' : 'received'}</td><td><span class="mono-trunc" style="max-width:140px">${out ? t.to : t.from}</span></td><td style="text-align:right;color:${out ? '#ff5a4d' : 'var(--ok)'}">${out ? '−' : '+'}${t.amount}</td></tr>`; }).join('') : '<tr><td colspan="4" style="color:var(--dim)">No transactions yet.</td></tr>'; }
+setInterval(refresh, 4000);
+$('gen').onclick = async () => { const s = hex(crypto.getRandomValues(new Uint8Array(32))); try { localStorage.setItem('latt_seed', s); } catch {} log('glog', 'Generating lattice keypair…'); await open(s); toast('ML-DSA-44 wallet created'); };
+$('imp').onclick = async () => { const s = (prompt('Paste your 64-character seed') || '').trim().toLowerCase(); if (!/^[0-9a-f]{64}$/.test(s)) return log('glog', 'That is not a valid seed.', 'er'); try { localStorage.setItem('latt_seed', s); } catch {} await open(s); };
+$('fau').onclick = async () => { const r = await (await fetch('/api/faucet', { method: 'POST', body: JSON.stringify({ address: W.addr }) })).json();
+  log('flog', r.ok ? `+${r.amount} tLATT credited` : `${r.error}${r.retryIn ? ' · try again in ' + r.retryIn : ''}`, r.ok ? 'ok' : 'er'); refresh(); };
+$('send').onclick = async () => { const to = $('to').value.trim(), amount = +$('amt').value;
+  if (!/^lat1[0-9a-f]{40}$/.test(to)) return log('slog', 'Enter a valid lat1… address.', 'er'); if (!(amount > 0)) return log('slog', 'Enter an amount.', 'er');
+  const t = { from: W.addr, to, amount, nonce: W.nonce, fee: 0.001 }; const t0 = performance.now();
+  const sig = ml_dsa44.sign(W.sk, new TextEncoder().encode(canon({ amount: t.amount, chain: 'lattice-testnet-1', fee: t.fee, from: t.from, nonce: t.nonce, to: t.to })));
+  const ms = (performance.now() - t0).toFixed(1); log('slog', `Signed locally with ML-DSA-44 in ${ms} ms (${sig.length.toLocaleString()} B). Broadcasting…`);
+  const r = await (await fetch('/api/tx', { method: 'POST', body: JSON.stringify({ ...t, pub: W.pub, sig: hex(sig) }) })).json();
+  if (r.ok) { log('slog', `✓ Verified by the network (${r.verified}). Tx <a href="/explorer/tx/${r.hash}" style="color:var(--or2)">${short(r.hash)}</a> lands in the next block.`, 'ok'); $('amt').value = ''; W.nonce++; } else log('slog', r.error, 'er'); };
+$('show').onclick = () => { $('seedbox').textContent = W.seed; };
+$('forget').onclick = () => { if (!confirm('Remove this wallet from this browser? Make sure you saved the seed.')) return; try { localStorage.removeItem('latt_seed'); } catch {} location.reload(); };
+const s = getSeed(); if (s) open(s);
+</script></body></html>
