@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.st{position:absolute;inset:0}.left{position:absolute;left:70px;top:120px;width:520px}.h{font-size:46px;line-height:1.08;margin-top:14px}.p{font-size:21px;line-height:1.55;margin-top:20px}.code{margin-top:24px;padding:14px 18px;font-size:16px;color:#ffb347}
+.right{position:absolute;left:680px;top:110px;width:540px;height:500px}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div style="position:absolute;left:70px;top:44px" class="k">How QuantumProof works</div>
+<div class="c" id="s0"><div><div class="d" style="font-size:64px;line-height:1.08">A chain with<br><span class="g">zero elliptic curves.</span></div><div class="mu" style="font-size:24px;margin-top:20px">three layers · 30 seconds</div></div></div>
+<!-- 1 keys -->
+<div class="st" id="s1"><div class="left"><div class="m mu" style="font-size:16px">01 / KEYS</div><div class="d h">Lattice keys,<br><span class="g">made on your device.</span></div><div class="p mu">Your wallet draws a random seed and derives an ML-DSA-44 keypair in the browser. The secret never leaves it.</div><div class="card m code">addr = "qpf1" ‖ SHA3-256(pk)</div></div>
+ <div class="right"><div class="card" style="padding:26px"><div class="k" style="font-size:12px">seed · 32 bytes</div><div class="m" id="seed" style="font-size:15px;margin-top:10px;word-break:break-all"></div></div>
+ <div class="card" style="padding:26px;margin-top:18px"><div class="k" style="font-size:12px">public key · 1,312 bytes</div><div class="m" id="pk" style="font-size:10px;line-height:1.5;margin-top:10px;word-break:break-all;height:120px;overflow:hidden;color:#a3968a"></div></div>
+ <div class="card" style="padding:26px;margin-top:18px"><div class="k" style="font-size:12px">address</div><div class="m g" id="ad" style="font-size:19px;margin-top:10px;font-weight:700"></div></div></div></div>
+<!-- 2 gate -->
+<div class="st" id="s2"><div class="left"><div class="m mu" style="font-size:16px">02 / THE GATE</div><div class="d h">Verified before<br><span class="g">it touches state.</span></div><div class="p mu">Every transaction carries its key and a 2,420-byte signature. The node checks it against FIPS 204, and a forged one is rejected on the spot.</div><div class="card m code">verify(ML-DSA-44, pk, tx, σ)</div></div>
+ <div class="right" id="txs"></div></div>
+<!-- 3 consensus -->
+<div class="st" id="s3"><div class="left"><div class="m mu" style="font-size:16px">03 / CONSENSUS</div><div class="d h">Every block,<br><span class="g">four lattice signatures.</span></div><div class="p mu">Validators rotate every 4 seconds. A block is final only when the proposer and at least two attesters sign it with ML-DSA-65.</div><div class="card m code">final ⇔ proposer ✓ ∧ ≥2 attesters ✓</div></div>
+ <div class="right"><div id="blk" class="card" style="position:absolute;left:150px;top:150px;width:240px;height:150px;padding:20px;border-color:#ff7a18"><div class="d" style="font-size:30px" id="bh">#1,284</div><div class="m mu" style="font-size:13px;margin-top:8px">SHA3-256 header</div><div class="m" style="font-size:13px;margin-top:22px" id="fin"></div></div><div id="vals"></div><svg id="ln" width="540" height="500" style="position:absolute;inset:0;pointer-events:none"></svg></div></div>
+<div class="c" id="s4"><div><div class="d" style="font-size:58px;line-height:1.12">Built post-quantum<br><span class="g">from genesis.</span></div><div class="m mu" style="font-size:20px;margin-top:26px">Read the whitepaper · quantumproofchain.net · $QPF</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.3)=>cl((t-a)/f)*cl((b-t)/f);
+let sd=3;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;const hex=(n)=>Array.from({length:n},()=>'0123456789abcdef'[Math.floor(r()*16)]).join('');
+const SEED=hex(64),PK=hex(1312*2),AD='qpf1'+hex(40);
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+function bg(){x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1;for(const[px,py]of P){const f=cl((px/1280-.35)*2);x.strokeStyle=`rgba(255,122,24,${.09*f})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}}
+const TX=[['qpf1c0a4…91e2','qpf17e7e…7e7e','250',1],['qpf1b81f…0c3d','qpf1a2d9…44f0','12.5',1],['qpf1ffff…dead','qpf1c0a4…91e2','9,999',0],['qpf13e90…7b21','qpf18c1a…e0f9','40',1]];
+$('txs').innerHTML=TX.map(([a,b,c,ok],i)=>`<div class="card" id="t${i}" style="position:absolute;left:0;right:0;top:${i*118}px;padding:18px 22px;display:grid;grid-template-columns:1fr auto;align-items:center"><div><div class="m" style="font-size:16px">${a} → ${b}</div><div class="m mu" style="font-size:13px;margin-top:6px">${c} tQPF · σ 2,420 B</div></div><div class="m" id="v${i}" style="font-size:17px"></div></div>`).join('');
+const V=['Kyber','Dilithium','Falcon','Sphincs'],VP=[[20,10],[360,10],[20,360],[360,360]];
+$('vals').innerHTML=V.map((v,i)=>`<div class="card" id="vv${i}" style="position:absolute;left:${VP[i][0]}px;top:${VP[i][1]}px;width:160px;padding:14px 16px"><div class="d" style="font-size:20px">${v}</div><div class="m" style="font-size:12px;margin-top:4px" id="vs${i}"></div></div>`).join('');
+window.__seek=(t)=>{bg();
+ $('s0').style.opacity=win(t,0,2.8);
+ $('s1').style.opacity=win(t,2.8,10.6);$('seed').textContent=SEED.slice(0,Math.floor(cl((t-3.4)/1)*64));$('pk').textContent=PK.slice(0,Math.floor(cl((t-4.6)/2)*PK.length));$('ad').textContent=t>6.9?AD.slice(0,Math.floor(cl((t-6.9)/.8)*44)):'';
+ $('s2').style.opacity=win(t,10.6,18.4);TX.forEach((tx,i)=>{const a=11.2+i*1.3,p=e((t-a)/.4),v=t>a+.7;$('t'+i).style.opacity=p;$('t'+i).style.transform=`translateX(${(1-p)*60}px)`;$('v'+i).innerHTML=v?(tx[3]?'<span class="ok">✓ verified</span>':'<span class="bad">✗ rejected</span>'):'<span class="mu">verifying…</span>';$('t'+i).style.borderColor=v?(tx[3]?'rgba(77,255,154,.5)':'rgba(255,90,77,.7)'):'';});
+ $('s3').style.opacity=win(t,18.4,26.4);let n=0;const L=[];V.forEach((v,i)=>{const s=t>19.4+i*.9;if(s)n++;$('vs'+i).innerHTML=s?`<span class="ok">${i===0?'proposed':'attested'} ✓</span>`:'<span class="mu">ML-DSA-65</span>';$('vv'+i).style.borderColor=s?'rgba(77,255,154,.55)':'';if(s)L.push(`<line x1="${VP[i][0]+80}" y1="${VP[i][1]+30}" x2="270" y2="225" stroke="#4dff9a" stroke-width="2" opacity=".6" stroke-dasharray="5 5"/>`);});
+ $('ln').innerHTML=L.join('');$('fin').innerHTML=n>=3?'<span class="ok">FINAL · '+n+' sigs ✓</span>':'<span class="mu">'+n+' / 3 needed</span>';$('blk').style.boxShadow=n>=3?'0 0 50px rgba(77,255,154,.25)':'';
+ $('s4').style.opacity=e((t-26.4)/.5);
+};window.__seek(0);
+</script>

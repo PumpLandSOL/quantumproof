@@ -88,7 +88,7 @@ const slim = (b) => ({ height: b.height, hash: b.hash, time: b.time, proposerNam
 
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
 const body = (req) => new Promise((ok) => { let d = ''; req.on('data', (c) => { d += c; if (d.length > 2e5) req.destroy(); }); req.on('end', () => { try { ok(JSON.parse(d || '{}')); } catch { ok({}); } }); });
 function stats() {
   const last = S.blocks.slice(-30); const span = last.length > 1 ? (last[last.length - 1].time - last[0].time) / 1000 : 1;
@@ -115,7 +115,7 @@ http.createServer(async (req, res) => {
       mempool.push(t); return send(res, 200, { ok: true, hash: txHash(t), verified: 'ML-DSA-44' }); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

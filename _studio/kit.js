@@ -1,0 +1,93 @@
+// QuantumProof brand kit: pfp, banner + 11 graphics. usage: node kit.js [name ...]
+'use strict';
+const fs = require('fs'), path = require('path'); const { open, sleep } = require('./cdp.cjs');
+const S = path.join(__dirname, 'src'), OUT = path.join(__dirname, '..', 'brand');
+const MARK = (w) => `<svg viewBox="0 0 40 40" style="width:${w}px;height:${w}px"><defs><linearGradient id="lg${w}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".55" stop-color="#ff7a18"/><stop offset="1" stop-color="#ff3d00"/></linearGradient></defs><path d="M20 3 35 11.5v17L20 37 5 28.5v-17Z" fill="none" stroke="url(#lg${w})" stroke-width="2.4"/><path d="M20 3v34M5 11.5l30 17M35 11.5l-30 17" stroke="url(#lg${w})" stroke-width="1.2" opacity=".55"/><circle cx="20" cy="20" r="4.2" fill="url(#lg${w})"/></svg>`;
+const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}body{background:#050403;color:#f5efe8;font-family:'Space Grotesk',sans-serif;overflow:hidden;position:relative}
+.g{background:linear-gradient(92deg,#ffb347,#ff7a18 45%,#ff3d00);-webkit-background-clip:text;background-clip:text;color:transparent}
+.m{font-family:'JetBrains Mono',monospace}.k{font-family:'JetBrains Mono';letter-spacing:.24em;color:#ff7a18;text-transform:uppercase}
+.mu{color:#a3968a}.dim{color:#5e544b}.ok{color:#4dff9a}.bad{color:#ff5a4d}
+.card{background:linear-gradient(180deg,rgba(255,122,24,.06),rgba(255,122,24,.015));border:2px solid rgba(255,122,24,.2);border-radius:28px}
+#lat{position:absolute;inset:0;z-index:-1}.glow{position:absolute;z-index:-1;border-radius:50%;filter:blur(140px)}
+.foot{position:absolute;left:120px;right:120px;bottom:70px;display:flex;align-items:center;justify-content:space-between;font-size:30px}
+.brand{display:flex;align-items:center;gap:18px;font-weight:700;letter-spacing:.14em;font-size:34px}
+.shot{border-radius:22px;border:2px solid rgba(255,122,24,.35);box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 70px rgba(255,122,24,.15)}`;
+const LAT = (W, H, x0 = .35, a = .22) => `<canvas id="lat" width="${W}" height="${H}"></canvas><script>(()=>{const c=document.getElementById('lat'),x=c.getContext('2d'),s=${Math.round(W / 26)};x.lineWidth=1.6;
+for(let y=-1;y<${H}/(s*.866)+2;y++)for(let i=-1;i<${W}/s+2;i++){const px=i*s+(y%2?s/2:0),py=y*s*.866,f=Math.max(0,Math.min(1,(px/${W}-${x0})*2.2));if(!f)continue;
+x.strokeStyle='rgba(255,122,24,'+(${a}*f)+')';x.beginPath();x.moveTo(px,py);x.lineTo(px+s,py);x.moveTo(px,py);x.lineTo(px+s/2,py+s*.866);x.moveTo(px,py);x.lineTo(px-s/2,py+s*.866);x.stroke();
+x.fillStyle='rgba(255,170,80,'+(.5*f)+')';x.beginPath();x.arc(px,py,2.6,0,7);x.fill();}})()</script>`;
+const page = (W, H, body, opts = {}) => `<!doctype html><meta charset="utf-8"><style>${CSS}</style><body style="width:${W}px;height:${H}px">${LAT(W, H, opts.x0 ?? .35, opts.a ?? .22)}
+<div class="glow" style="width:900px;height:700px;right:-200px;bottom:-250px;background:rgba(255,90,0,.22)"></div><div class="glow" style="width:700px;height:500px;left:-250px;top:-250px;background:rgba(255,140,40,.1)"></div>${body}
+${opts.foot === false ? '' : `<div class="foot"><span class="brand">${MARK(58)}QUANTUMPROOF</span><span class="m mu">quantumproofchain.net · $QPF</span></div>`}</body>`;
+const G = (kick, title, inner) => page(2400, 1350, `<div style="position:absolute;left:120px;top:0;bottom:170px;right:120px;display:flex;flex-direction:column;justify-content:center"><div><div class="k" style="font-size:26px">${kick}</div><div style="font-size:96px;font-weight:700;letter-spacing:-.035em;line-height:1.02;margin-top:22px">${title}</div>${inner}</div></div>`);
+const shot = (f) => 'file:///' + path.join(__dirname, 'shots', f).split(path.sep).join('/');
+
+const P = {
+  'qpf-pfp': page(2000, 2000, `<div style="position:absolute;inset:0;display:grid;place-items:center">${MARK(1250)}</div>`, { foot: false, x0: -1, a: .16 }),
+  'qpf-banner': page(3000, 1000, `<div style="position:absolute;left:150px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center"><div class="k" style="font-size:30px">Quantum-resistant layer 1 · testnet live</div>
+   <div style="font-size:150px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:24px">The chain that<br><span class="g">survives Q-day.</span></div><div class="m mu" style="font-size:34px;margin-top:34px">ML-DSA (FIPS 204) · SHA3-256 · zero elliptic curves</div></div>
+   <div style="position:absolute;right:220px;top:200px">${MARK(600)}</div>`, { foot: false, x0: .4 }),
+
+  'qpf-keyart': page(2400, 1350, `<div style="position:absolute;left:120px;top:200px"><div class="k" style="font-size:28px">// quantumproof · $QPF</div><div style="font-size:170px;font-weight:700;letter-spacing:-.045em;line-height:.95;margin-top:30px">The chain that<br><span class="g">survives Q-day.</span></div>
+   <div style="font-size:42px;margin-top:44px;max-width:1300px;line-height:1.4" class="mu">Every block, every vote and every transaction signed with <b style="color:#f5efe8">ML-DSA</b>, the lattice-based NIST standard Shor's algorithm can't break.</div></div>
+   <div style="position:absolute;right:170px;top:260px">${MARK(620)}</div>`),
+
+  'qpf-threat': G('// the threat', 'Every chain you hold signs with math<br>a quantum computer <span class="g">breaks.</span>', `
+   <div class="card" style="margin-top:60px;padding:20px 50px">${[['Bitcoin', 'ECDSA / Schnorr · secp256k1', 'BROKEN BY SHOR', 'bad'], ['Ethereum', 'ECDSA · secp256k1', 'BROKEN BY SHOR', 'bad'], ['Solana', 'Ed25519', 'BROKEN BY SHOR', 'bad'], ['NEAR', 'Ed25519', 'BROKEN BY SHOR', 'bad'], ['QuantumProof', 'ML-DSA-44 / ML-DSA-65 · lattice', 'NO KNOWN ATTACK', 'ok']]
+     .map(([a, b, c, k], i) => `<div style="display:grid;grid-template-columns:520px 1fr 420px;padding:26px 0;font-size:40px;${i < 4 ? 'border-bottom:2px solid rgba(255,122,24,.1)' : ''}"><b style="${k === 'ok' ? '' : 'font-weight:500'}">${k === 'ok' ? `<span class="g">${a}</span>` : a}</b><span class="m mu" style="font-size:32px;padding-top:6px">${b}</span><span class="m ${k}" style="font-size:30px;text-align:right;padding-top:6px">${c}</span></div>`).join('')}</div>`),
+
+  'qpf-harvest': G('// harvest now, break later', 'The attack has <span class="g">already started.</span>', `
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:80px">${[['TODAY', 'Record it', 'Every exposed public key and signed transaction is permanent, public data. Anyone can archive it.'], ['Q-DAY', 'Break it', "A large quantum computer runs Shor's algorithm on the archive and recovers private keys from public ones."], ['AFTER', 'Drain it', 'Every ECC wallet that ever signed is open. Migrating after Q-day is too late.']]
+     .map(([k, t, d], i) => `<div class="card" style="padding:56px;${i === 1 ? 'border-color:#ff5a4d' : ''}"><div class="m" style="font-size:28px;color:${i === 1 ? '#ff5a4d' : '#ff7a18'};letter-spacing:.2em">${k}</div><div style="font-size:66px;font-weight:700;margin-top:24px">${t}</div><div class="mu" style="font-size:34px;line-height:1.5;margin-top:22px">${d}</div></div>`).join('')}</div>
+   <div style="font-size:44px;margin-top:60px">QuantumProof never publishes an elliptic-curve key. <span class="g" style="font-weight:700">There's nothing to harvest.</span></div>`),
+
+  'qpf-sigsize': G('// the honest trade-off', 'Bigger signatures. <span class="g">Real security.</span>', `
+   <div class="card" style="margin-top:60px;padding:50px 60px">${[['Ed25519', 'Solana · NEAR', 64, '#3b322b'], ['ECDSA', 'Bitcoin · Ethereum', 65, '#3b322b'], ['ML-DSA-44', 'QuantumProof tx', 2420, 'linear-gradient(90deg,#ffb347,#ff7a18)'], ['ML-DSA-65', 'QuantumProof blocks', 3309, 'linear-gradient(90deg,#ff7a18,#ff3d00)']]
+     .map(([n, s, b, c]) => `<div style="display:grid;grid-template-columns:480px 1fr 200px;gap:30px;align-items:center;padding:20px 0"><div><div style="font-size:44px;font-weight:600">${n}</div><div class="m dim" style="font-size:26px">${s}</div></div><div style="height:64px;border-radius:14px;width:${Math.max(1.4, b / 3309 * 100)}%;background:${c}"></div><div class="m" style="font-size:38px;text-align:right">${b.toLocaleString()} B</div></div>`).join('')}
+   <div class="m dim" style="font-size:24px;margin-top:20px">Signature sizes per FIPS 204 and RFC 8032. 64-byte signatures are small because the math is breakable.</div></div>`),
+
+  'qpf-layers': G('// how it works', 'Three layers. <span class="g">Zero elliptic curves.</span>', `
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:70px">${[['01', 'Keys in your browser', 'ML-DSA-44 keypair generated on your device. The secret never leaves it.', 'addr = "qpf1" ‖ SHA3-256(pk)'], ['02', 'Verified at the gate', 'Every tx carries a 1,312 B key and 2,420 B signature, checked against FIPS 204 before the mempool.', 'verify(ML-DSA-44, pk, tx, σ)'], ['03', 'Quantum-safe consensus', 'Each block is signed by its proposer and attested by the other validators with ML-DSA-65.', 'final ⇔ 1 + ≥2 valid sigs']]
+     .map(([n, t, d, c]) => `<div class="card" style="padding:56px"><div class="m" style="font-size:30px;color:#ff7a18">${n}</div><div style="font-size:56px;font-weight:700;margin-top:24px;line-height:1.1">${t}</div><div class="mu" style="font-size:32px;line-height:1.5;margin-top:24px">${d}</div><div class="m" style="font-size:24px;color:#ffb347;margin-top:36px;background:#0a0705;border:2px solid rgba(255,122,24,.2);border-radius:14px;padding:20px 22px">${c}</div></div>`).join('')}</div>`),
+
+  'qpf-consensus': G('// consensus', 'Four validators. <span class="g">Four lattice keys.</span>', `
+   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:34px;margin-top:70px">${['Kyber', 'Dilithium', 'Falcon', 'Sphincs'].map((v, i) => `<div class="card" style="padding:46px;${i === 0 ? 'border-color:#ff7a18;box-shadow:0 0 70px rgba(255,122,24,.25)' : ''}"><div class="m dim" style="font-size:24px">${i === 0 ? 'PROPOSER' : 'ATTESTER'}</div><div style="font-size:58px;font-weight:700;margin-top:14px">${v}</div><div class="m mu" style="font-size:24px;margin-top:14px">ML-DSA-65 · 1,952 B key</div><div style="display:flex;gap:12px;margin-top:30px">${'<span style="width:22px;height:22px;border-radius:50%;background:#4dff9a;box-shadow:0 0 14px #4dff9a"></span>'}<span class="m ok" style="font-size:26px">signed ✓</span></div></div>`).join('')}</div>
+   <div class="card" style="margin-top:44px;padding:44px 56px;display:flex;justify-content:space-between;align-items:center"><span class="m" style="font-size:40px;color:#ffb347">final(B) ⇔ proposer ✓ ∧ ≥ 2 attestations ✓</span><span class="mu" style="font-size:34px">4-second slots · every sig verified</span></div>`),
+
+  'qpf-wallet': page(2400, 1350, `<div style="position:absolute;left:120px;top:150px;width:820px"><div class="k" style="font-size:26px">// the wallet</div><div style="font-size:92px;font-weight:700;letter-spacing:-.035em;line-height:1.04;margin-top:22px">Your keys never<br><span class="g">leave your device.</span></div>
+   <div class="mu" style="font-size:36px;line-height:1.5;margin-top:36px">Generate an ML-DSA-44 wallet in the browser, claim testnet tQPF, and send a transfer signed locally and verified by the network.</div>
+   <div class="m" style="font-size:30px;margin-top:40px;color:#ffb347">quantumproofchain.net/wallet</div></div>
+   <img class="shot" src="${shot('02-wallet.png')}" style="position:absolute;right:-60px;top:170px;width:1360px">`),
+
+  'qpf-explorer': page(2400, 1350, `<div style="position:absolute;left:120px;top:150px;width:780px"><div class="k" style="font-size:26px">// the explorer</div><div style="font-size:92px;font-weight:700;letter-spacing:-.035em;line-height:1.04;margin-top:22px">Every signature,<br><span class="g">in the open.</span></div>
+   <div class="mu" style="font-size:36px;line-height:1.5;margin-top:36px">Open any block and read all four ML-DSA-65 signatures, 3,309 bytes each. Don't trust the claim. Check the bytes.</div>
+   <div class="m" style="font-size:30px;margin-top:40px;color:#ffb347">quantumproofchain.net/explorer</div></div>
+   <img class="shot" src="${shot('03-block.png')}" style="position:absolute;right:-60px;top:170px;width:1400px">`),
+
+  'qpf-bench': G('// measured, not promised', 'Verification within <span class="g">2× of Ed25519.</span>', `
+   <div class="card" style="margin-top:60px;padding:30px 60px"><div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;padding:22px 0;border-bottom:2px solid rgba(255,122,24,.15)" class="m dim"><span style="font-size:26px">SCHEME</span><span style="font-size:26px">SIGN</span><span style="font-size:26px">VERIFY</span><span style="font-size:26px">QUANTUM-SAFE</span></div>
+   ${[['Ed25519', '89 µs', '234 µs', '✗', 'bad'], ['ML-DSA-44', '1,504 µs', '331 µs', '✓', 'ok'], ['ML-DSA-65', '2,361 µs', '444 µs', '✓', 'ok']].map(([a, b, c, d, k]) => `<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;padding:30px 0;font-size:48px;border-bottom:2px solid rgba(255,122,24,.07)"><b>${a}</b><span class="m">${b}</span><span class="m ${k === 'ok' ? 'g' : ''}" style="font-weight:700">${c}</span><span class="m ${k}">${d}</span></div>`).join('')}</div>
+   <div class="mu" style="font-size:34px;margin-top:40px">Verification is what every node runs on every transaction. Measured on the reference node, Node 24, one core.</div>`),
+
+  'qpf-vs': G('// the quantum-resistant field', 'Quantum-proof is a <span class="g">$28B question.</span>', `
+   <div class="card" style="margin-top:50px;padding:16px 56px"><div style="display:grid;grid-template-columns:1.15fr 1.5fr .9fr 1fr;padding:22px 0;border-bottom:2px solid rgba(255,122,24,.15)" class="m dim"><span style="font-size:24px">PROJECT</span><span style="font-size:24px">SIGNATURES</span><span style="font-size:24px">QUANTUM-SAFE</span><span style="font-size:24px;text-align:right">PEAK MCAP (12M)</span></div>
+   ${[['$ZEC', 'Zcash', 'Elliptic curves (Jubjub, Pallas)', '✗', 'bad', '$28.0B'], ['$QRL', 'Quantum Resistant Ledger', 'XMSS · hash-based, stateful', '✓', 'ok', '$254.6M'], ['$QTC', 'Quantus', 'ML-DSA (Dilithium)', '✓', 'ok', '$46.1M'], ['$ABEL', 'Abelian', 'Lattice-based', '✓', 'ok', '$27.4M'], ['$QPF', 'QuantumProof', 'ML-DSA-44 / -65 · FIPS 204', '✓', 'ok', 'day one']]
+     .map(([t, n, s, q, k, m], i) => `<div style="display:grid;grid-template-columns:1.15fr 1.5fr .9fr 1fr;padding:24px 0;align-items:center;${i < 4 ? 'border-bottom:2px solid rgba(255,122,24,.07)' : ''}"><div><div style="font-size:46px;font-weight:700" class="${i === 4 ? 'g' : ''}">${t}</div><div class="mu" style="font-size:24px">${n}</div></div><span class="m mu" style="font-size:28px">${s}</span><span class="m ${k}" style="font-size:40px">${q}</span><span class="m ${i === 4 ? 'g' : ''}" style="font-size:46px;font-weight:700;text-align:right">${m}</span></div>`).join('')}</div>
+   <div class="dim" style="font-size:22px;margin-top:20px">Peak market cap over the last 12 months, CoinGecko daily data (Oct 9 2026). ZEC is a privacy coin on elliptic curves, shown for scale.</div>`),
+
+  'qpf-whitepaper': page(2400, 1350, `<div style="position:absolute;left:120px;top:170px;width:1000px"><div class="k" style="font-size:26px">// whitepaper v1.0</div><div style="font-size:110px;font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:24px">The QuantumProof<br><span class="g">whitepaper.</span></div>
+   <div class="mu" style="font-size:36px;line-height:1.55;margin-top:40px">8 pages: the threat, the threat model, ML-DSA cryptography with measured benchmarks, transaction format, consensus and finality, roadmap, and disclosures.</div>
+   <div class="m" style="font-size:34px;margin-top:46px;color:#ffb347">quantumproofchain.net/whitepaper</div></div>
+   <div style="position:absolute;right:120px;top:120px;width:1060px;height:1020px">${[0, 1, 2].map((i) => `<img src="${'file:///' + path.join(__dirname, 'shots', 'wp' + [1, 4, 6][i] + '.png').split(path.sep).join('/')}" style="position:absolute;width:640px;left:${i * 210}px;top:${i * 70}px;border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.8);border:2px solid rgba(255,122,24,.3);transform:rotate(${(i - 1) * 4}deg)">`).join('')}</div>`),
+};
+const SIZES = { 'qpf-pfp': [2000, 2000], 'qpf-banner': [3000, 1000] };
+(async () => {
+  const want = process.argv.slice(2); let port = 9700;
+  for (const [name, html] of Object.entries(P)) { if (want.length && !want.includes(name)) continue;
+    const f = path.join(S, name + '.html'); fs.writeFileSync(f, html); const [W, H] = SIZES[name] || [2400, 1350];
+    for (let k = 0; k < 3; k++) { const c = await open('file:///' + f.split(path.sep).join('/'), W, H, port++); await sleep(2600); await c.ev('document.fonts.ready.then(()=>1)'); await sleep(500);
+      await c.shot(path.join(OUT, name + '.png')); c.close(); if (fs.statSync(path.join(OUT, name + '.png')).size > 1000) break; }
+    console.log('rendered', name);
+  }
+})().catch((e) => { console.error(e); process.exit(1); });
