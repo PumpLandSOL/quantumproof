@@ -5,7 +5,7 @@ function chrome(active) {
   n.innerHTML = `<div class="wrap"><a class="brand" href="/">${LOGO}QuantumProof</a><div class="links">${[['/', 'Network'], ['/explorer', 'Explorer'], ['/wallet', 'Wallet'], ['/docs', 'Docs'], ['/whitepaper', 'Whitepaper']].map(([h, l]) => `<a href="${h}" class="${active === h ? 'on' : ''}">${l}</a>`).join('')}</div><div class="sp"></div><span class="pill"><span class="dot"></span><span id="navh">testnet</span></span><a class="btn pri" href="/wallet">Open Wallet</a></div>`;
   document.body.prepend(n);
   const f = document.createElement('footer');
-  f.innerHTML = `<div class="wrap"><span class="brand" style="font-size:14px">${LOGO}QuantumProof</span><span>Quantum-resistant L1 · ML-DSA (FIPS 204) · SHA3-256</span><div class="sp"></div><a href="/docs">Docs</a><a href="/whitepaper">Whitepaper</a><a href="/explorer">Explorer</a><a href="https://x.com/QuantumProofChain" target="_blank">X</a></div>`;
+  f.innerHTML = `<div class="wrap"><span class="brand" style="font-size:14px">${LOGO}QuantumProof</span><span>Quantum-resistant L1 · ML-DSA (FIPS 204) · SHA3-256</span><div class="sp"></div><a href="/docs">Docs</a><a href="/whitepaper">Whitepaper</a><a href="/explorer">Explorer</a><a href="https://x.com/QuantumProofL1" target="_blank">X</a></div>`;
   document.body.append(f);
   setInterval(tickH, 4000); tickH();
 }

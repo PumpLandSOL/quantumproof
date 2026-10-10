@@ -1,6 +1,6 @@
 # QuantumProof X kit
 
-X: https://x.com/QuantumProofChain · site: https://quantumproofchain.net
+X: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net
 
 ## Bio
 ```
