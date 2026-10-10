@@ -1,0 +1,10 @@
+const fs=require('fs');let s=fs.readFileSync('kit.js','utf8');
+if(s.includes("'qpf-roadmap'"))process.exit(0);
+const PH=[['PHASE 01','NOW','Launch','$QPF live on pump.fun','Testnet live: ML-DSA blocks, wallet, explorer','Whitepaper v1.0 published','live'],
+['PHASE 02','NEXT','Scale the testnet','Open validator onboarding','Multi-node gossip + public RPC','Stress tests and audit kickoff','next'],
+['PHASE 03','SOON','Mainnet + migration','QuantumProof mainnet goes live','$QPF holders migrate 1:1 to native QPF','Solana snapshot, claim with your ML-DSA wallet','soon']];
+const card=PH.map(([p,w,t,a,b,c,k])=>`<div class="card" style="padding:50px;position:relative;${k==='live'?'border-color:#ff7a18;box-shadow:0 0 80px rgba(255,122,24,.25)':''}"><div style="display:flex;justify-content:space-between;align-items:center"><span class="m dim" style="font-size:24px">${p}</span><span class="m" style="font-size:26px;padding:8px 18px;border-radius:99px;${k==='live'?'background:#ff7a18;color:#140800;font-weight:700':'border:2px solid rgba(255,122,24,.4);color:#ffb347'}">${k==='live'?'● '+w:w}</span></div><div style="font-size:60px;font-weight:700;margin-top:28px;letter-spacing:-.02em">${k==='soon'?'<span class="g">'+t+'</span>':t}</div>${[a,b,c].map(x=>`<div style="display:flex;gap:16px;font-size:31px;margin-top:22px;line-height:1.35" class="mu"><span style="color:${k==='live'?'#4dff9a':'#ff7a18'}">${k==='live'?'✓':'→'}</span><span>${x}</span></div>`).join('')}</div>`).join('');
+const add=`  'qpf-roadmap': G('// roadmap', 'Pump.fun today. <span class="g">Mainnet next.</span>', \`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:64px">${card.replace(/`/g,'\`')}</div>
+   <div style="font-size:36px;margin-top:46px">Every $QPF holder carries over to the quantum-safe chain. <span class="g" style="font-weight:700">Hold through the migration.</span></div>\`),
+`;
+s=s.split("};\nconst SIZES").join(add+"};\nconst SIZES");fs.writeFileSync('kit.js',s);console.log('added');

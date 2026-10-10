@@ -50,7 +50,7 @@ POST /api/tx                 submit signed transaction
 POST /api/faucet             { address }
 GET  /api/live               server-sent events, one per block</pre>
 <h2 id="token">$QPF</h2>
-<p>$QPF is the QuantumProof community token, launched on pump.fun (Solana). The contract address is shown on the front page with a copy button. tQPF is the testnet gas asset; it is separate from $QPF.</p>
+<p>$QPF is the QuantumProof community token, launched on pump.fun (Solana). The contract address is shown on the front page with a copy button. When mainnet goes live, $QPF holders migrate 1:1 to native QPF via a snapshot. tQPF is the testnet gas asset; it is separate from $QPF.</p>
 <h2 id="faq">FAQ</h2>
 <div class="faq"><b>Is quantum resistance real or marketing?</b><p>Real. ML-DSA is a published NIST standard and every signature on this network is one. Open any block in the explorer to see the full ML-DSA-65 signatures and their byte sizes.</p></div>
 <div class="faq"><b>Why are signatures so much bigger?</b><p>Lattice signatures trade size for quantum security: 2,420 bytes versus 64 for Ed25519. QuantumProof is designed around that size from the start.</p></div>

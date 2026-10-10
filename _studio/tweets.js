@@ -107,6 +107,17 @@ Read it:
 quantumproofchain.net/whitepaper
 
 $QPF`],
+  ['qpf-roadmap.png', `Why pump.fun first?
+
+The community forms now while the chain scales.
+
+NOW: $QPF live + testnet live
+NEXT: open validators, public RPC
+SOON: mainnet, $QPF migrates 1:1 to native QPF
+
+Hold through the migration.
+
+quantumproofchain.net`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofChain · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });

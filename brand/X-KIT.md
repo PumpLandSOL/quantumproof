@@ -167,3 +167,18 @@ quantumproofchain.net/whitepaper
 
 $QPF
 ```
+
+## 15. qpf-roadmap.png
+```
+Why pump.fun first?
+
+The community forms now while the chain scales.
+
+NOW: $QPF live + testnet live
+NEXT: open validators, public RPC
+SOON: mainnet, $QPF migrates 1:1 to native QPF
+
+Hold through the migration.
+
+quantumproofchain.net
+```

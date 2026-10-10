@@ -179,12 +179,10 @@ GET  /api/live  (SSE)</pre></div>
  <p>Each block carries four ML-DSA-65 signatures (13,236 bytes) and requires four verifications (~1.8 ms on one core). At 200 transactions per block, admission verification costs ~66 ms per slot, about 1.7% of a 4-second slot on a single core.</p>
  <h3>Roadmap</h3>
  <table><thead><tr><th>Phase</th><th>Scope</th></tr></thead><tbody>
- <tr><td>v1 · Testnet <span class="ok">(live)</span></td><td>ML-DSA blocks and transactions, explorer, wallet, faucet</td></tr>
- <tr><td>v2 · Open validators</td><td>Staked validator set, BFT with ML-DSA votes, multi-node gossip</td></tr>
- <tr><td>v3 · Programmability</td><td>Contract runtime with PQ-native account abstraction and multisig</td></tr>
- <tr><td>v4 · Bridges</td><td>Hash-based attestations for assets moving in from ECC chains</td></tr>
- <tr><td>v5 · Privacy</td><td>Lattice-based commitments for confidential transfers</td></tr></tbody></table>
- <p>Roadmap phases describe planned work and may change as research and audits progress.</p>
+ <tr><td>01 · Launch <span class="ok">(now)</span></td><td>$QPF live on pump.fun; testnet live with ML-DSA blocks, wallet and explorer; whitepaper v1.0</td></tr>
+ <tr><td>02 · Scale the testnet <span style="color:var(--or2)">(next)</span></td><td>Open validator onboarding, multi-node gossip, public RPC, stress tests, audit kickoff</td></tr>
+ <tr><td>03 · Mainnet + migration <span style="color:var(--or2)">(soon)</span></td><td>QuantumProof mainnet goes live; $QPF holders migrate 1:1 to native QPF via a Solana snapshot, claimed with an ML-DSA wallet</td></tr></tbody></table>
+ <p>After mainnet, research continues on PQ-native smart accounts, hash-based bridge attestations and lattice-based confidential transfers.</p>
  <div class="ft"><span>quantumproofchain.net</span><span>7 / 8</span></div></section>
 
 <!-- 8 TOKEN + RISKS + REFS -->
@@ -192,6 +190,8 @@ GET  /api/live  (SSE)</pre></div>
  <h2>$QPF and <span class="g">disclosures</span></h2>
  <h3>$QPF</h3>
  <p>$QPF is the QuantumProof community token, launched on pump.fun on Solana. Its contract address is published on quantumproofchain.net with a copy button. <b>tQPF</b> is the testnet gas asset; it is a separate asset with no monetary value and cannot be exchanged for $QPF.</p>
+ <h3>Migration to mainnet</h3>
+ <p>$QPF launches on Solana so the community can form before the chain ships. When QuantumProof mainnet goes live, a snapshot of $QPF balances is taken and holders claim native QPF 1:1 by signing with their ML-DSA wallet. From that point the asset lives on a quantum-resistant ledger.</p>
  <h3>Risks and disclosures</h3>
  <ul><li>QuantumProof is in testnet. The validator set is permissioned and operated by the project.</li>
  <li>$QPF lives on Solana, which uses Ed25519. The token itself inherits Solana's security model; the post-quantum guarantees in this paper apply to the QuantumProof chain.</li>
