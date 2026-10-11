@@ -195,3 +195,14 @@ The quantum-resistant L1. Testnet already live, every block signed with ML-DSA. 
 
 quantumproofchain.net
 ```
+
+## 17. qpf-tamper-22s.mp4
+```
+What happens if someone rewrites a QuantumProof block?
+
+Change one tx and its SHA3-256 hash breaks. Every later block points at a parent that no longer exists. All 4 ML-DSA-65 signatures fail.
+
+No curves to break. No sigs to forge.
+
+$QPF
+```

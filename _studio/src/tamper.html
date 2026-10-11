@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.blk{position:absolute;top:250px;width:250px;height:250px;padding:20px 22px}.row{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:13px;margin-top:9px}.row b{font-weight:500;color:#f5efe8}
+.hash{font-family:'JetBrains Mono';font-size:12px;margin-top:14px;word-break:break-all;line-height:1.45}.sigs{display:flex;gap:9px;margin-top:16px}.sigs i{width:15px;height:15px;border-radius:50%;display:block}
+.cap{position:absolute;left:0;right:0;top:70px;text-align:center}.lnk{position:absolute;top:372px;height:3px;width:60px}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">Anatomy of a block</div><div class="d" style="font-size:66px;line-height:1.08;margin-top:18px">What happens if someone<br><span class="g">rewrites history?</span></div></div></div>
+<div id="chain" style="position:absolute;inset:0"><div class="cap"><div class="k" id="kk"></div><div class="d" style="font-size:40px;margin-top:12px" id="ct"></div></div><div id="bl"></div><div class="m mu" style="position:absolute;left:0;right:0;bottom:70px;text-align:center;font-size:17px" id="foot"></div></div>
+<div class="c" id="s9"><div><div class="d" style="font-size:54px;line-height:1.12">History is locked by<br><span class="g">SHA3-256 and ML-DSA.</span></div><div class="mu" style="font-size:22px;margin-top:22px">No elliptic curves to break. No signatures to forge.</div><div class="m mu" style="font-size:20px;margin-top:26px">quantumproofchain.net · $QPF</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.3)=>cl((t-a)/f)*cl((b-t)/f);
+let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;const hx=(n)=>Array.from({length:n},()=>'0123456789abcdef'[Math.floor(r()*16)]).join('');
+const N=4,X=[85,375,665,955],H=[hx(24),hx(24),hx(24),hx(24)],BAD=[hx(24),hx(24),hx(24),hx(24)];
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+function bg(red){x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1;for(const[px,py]of P){x.strokeStyle=red?`rgba(255,70,60,${.07})`:`rgba(255,122,24,.07)`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}}
+$('bl').innerHTML=X.map((px,i)=>`<div class="card blk" id="b${i}" style="left:${px}px"><div class="d" style="font-size:26px">#${(1281+i).toLocaleString()}</div>
+<div class="row"><span class="mu">prev</span><b id="pv${i}">${i?H[i-1].slice(0,10):'7f3a91c0e2'}…</b></div><div class="row"><span class="mu">tx</span><b id="tx${i}">${i===1?'250 tQPF':(12+i*7)+' tQPF'}</b></div>
+<div class="hash" id="h${i}"></div><div class="sigs">${[0,1,2,3].map(k=>`<i id="s${i}_${k}"></i>`).join('')}</div><div class="m" style="font-size:12px;margin-top:8px" id="st${i}"></div></div>`).join('')+X.slice(1).map((px,i)=>`<div class="lnk" id="l${i}" style="left:${px-40}px"></div>`).join('');
+const SC=[[2.8,'01 / THE CHAIN','Each block commits to the one before it.','Every header holds the SHA3-256 hash of its parent.'],[7.4,'02 / THE ATTACK','Change one transaction in block #1,282…','250 tQPF → 25,000 tQPF'],[11.2,'03 / THE HASH BREAKS','…and its SHA3-256 hash changes.','Every later block now points at a parent that no longer exists.'],[15.2,'04 / THE SIGNATURES FAIL','All 4 ML-DSA-65 signatures are over the old hash.','Forging new ones needs the validators’ lattice keys. Shor’s algorithm doesn’t help.'],[19.6]];
+window.__seek=(t)=>{
+ const atk=t>=8.6,brk=t>=11.6,sig=t>=15.6;bg(sig&&t<20);
+ $('s0').style.opacity=win(t,0,2.8);$('chain').style.opacity=win(t,2.8,19.6);let k=0;for(let i=0;i<SC.length-1;i++)if(t>=SC[i][0])k=i;$('kk').textContent=SC[k][1];$('ct').innerHTML=SC[k][2];$('foot').textContent=SC[k][3];$('ct').parentElement.style.opacity=e((t-SC[k][0])/.3);
+ for(let i=0;i<N;i++){const p=e((t-3.1-i*.3)/.4);$('b'+i).style.opacity=p;$('b'+i).style.transform=`translateY(${(1-p)*40}px)`;
+  const bad=(brk&&i===1)||(brk&&i>1&&t>=12.3+(i-2)*.5);const h=i===1&&brk?BAD[1]:H[i];$('h'+i).innerHTML=`<span class="mu">hash</span><br><span style="color:${i===1&&brk?'#ff5a4d':'#ffb347'}">${h.slice(0,Math.floor(cl((t-3.4-i*.3)/.6)*24))}…</span>`;
+  if(i===1)$('tx1').innerHTML=atk?`<span class="bad">${t<9.2?'250 tQPF':'25,000 tQPF'}</span>`:'250 tQPF';
+  if(i>1)$('pv'+i).style.color=brk&&t>=12.3+(i-2)*.5?'#ff5a4d':'';
+  const sigBad=sig&&i>=1&&t>=15.9+(i-1)*.4;for(let s=0;s<4;s++){const on=t>3.8+i*.3+s*.12;$(`s${i}_${s}`).style.background=sigBad?'#ff5a4d':on?'#4dff9a':'rgba(255,255,255,.12)';$(`s${i}_${s}`).style.boxShadow=sigBad?'0 0 10px #ff5a4d':on?'0 0 10px #4dff9a':'';}
+  $('st'+i).innerHTML=sigBad?'<span class="bad">✗ INVALID · rejected</span>':bad?(i===1?'<span class="bad">hash changed</span>':'<span class="bad">parent mismatch</span>'):t>4.4+i*.3?'<span class="ok">✓ 4 ML-DSA-65 sigs</span>':'';
+  $('b'+i).style.borderColor=sigBad||bad?'rgba(255,90,77,.75)':i===1&&atk?'rgba(255,179,71,.7)':'';$('b'+i).style.transform+=i===1&&atk&&t<9.4?` translateX(${Math.sin(t*70)*4}px)`:'';}
+ for(let i=0;i<N-1;i++){const broken=brk&&t>=11.9+i*.5&&i>=0&&i+1>=1&&i>=0&&(i>=1||brk);const lb=brk&&i>=1&&t>=12.3+(i-1)*.5;$('l'+i).style.background=lb?'repeating-linear-gradient(90deg,#ff5a4d 0 6px,transparent 6px 12px)':'linear-gradient(90deg,#ff7a18,#ffb347)';$('l'+i).style.opacity=e((t-3.6-i*.3)/.4);}
+ $('s9').style.opacity=e((t-19.6)/.5);
+};window.__seek(0);
+</script>
