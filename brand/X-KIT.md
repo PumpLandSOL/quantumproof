@@ -182,3 +182,16 @@ Hold through the migration.
 
 quantumproofchain.net
 ```
+
+## 16. qpf-launch.png
+```
+$QPF goes live today. Sunday, October 11.
+
+Name: QuantumProof
+Ticker: $QPF
+Where: pump.fun
+
+The quantum-resistant L1. Testnet already live, every block signed with ML-DSA. Mainnet migration next.
+
+quantumproofchain.net
+```

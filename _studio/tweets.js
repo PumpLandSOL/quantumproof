@@ -118,6 +118,15 @@ SOON: mainnet, $QPF migrates 1:1 to native QPF
 Hold through the migration.
 
 quantumproofchain.net`],
+  ['qpf-launch.png', `$QPF goes live today. Sunday, October 11.
+
+Name: QuantumProof
+Ticker: $QPF
+Where: pump.fun
+
+The quantum-resistant L1. Testnet already live, every block signed with ML-DSA. Mainnet migration next.
+
+quantumproofchain.net`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });
