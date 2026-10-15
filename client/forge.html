@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Forge Challenge</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<meta property="og:title" content="The Forge Challenge: break ML-DSA, take the bounty"><meta property="og:description" content="One ML-DSA-65 public key. No secret key exists. Forge one signature and the bounty is yours.">
+<style>
+.hero{padding:70px 0 10px}.hero h1{font-size:clamp(40px,6.4vw,82px);letter-spacing:-.045em;line-height:1;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:780px;margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}.stats .card{padding:22px}.stats .k{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}.stats .v{font-size:30px;font-weight:700;margin-top:8px}
+h2{font-size:30px;letter-spacing:-.02em;margin:56px 0 8px}.sub{color:var(--mu);font-size:15px;line-height:1.7}
+.key{font-family:'JetBrains Mono';font-size:11.5px;line-height:1.55;color:var(--or2);word-break:break-all;background:#0a0705;border:1px solid var(--line);border-radius:12px;padding:18px;max-height:220px;overflow:auto;margin-top:14px}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.rules .card{padding:24px}.rules b{display:block;font-size:18px;margin:10px 0 8px}.rules p{color:var(--mu);font-size:14px;line-height:1.65}
+.f{display:grid;gap:10px;margin-top:16px}.f input,.f textarea{background:#0a0705;border:1px solid var(--line2);border-radius:10px;padding:13px 14px;color:var(--tx);font-family:'JetBrains Mono';font-size:13px}.f textarea{min-height:110px;resize:vertical}
+#out{font-family:'JetBrains Mono';font-size:14px;margin-top:12px}
+pre.cmd{background:#0a0705;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono';font-size:13px;color:var(--or2);overflow-x:auto;margin-top:12px;line-height:1.7}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.rules{grid-template-columns:1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// the forge challenge</span>
+<h1>Break ML-DSA.<br><span class="g">Take the bounty.</span></h1>
+<p>Below is one ML-DSA-65 public key. Its secret key was generated in memory and discarded on the spot, and was never saved anywhere. Nobody can sign for this key, including us. Produce one valid signature over the claim message and the bounty is yours.</p>
+<div class="stats" id="st"></div></section>
+
+<h2>The key</h2><p class="sub" id="kmeta"></p><div class="key" id="pub"></div>
+
+<h2>The rules</h2>
+<div class="rules">
+<div class="card"><span class="kick">01</span><b>Sign the claim</b><p>Message (UTF-8): <code style="color:var(--or2)">quantumproof-forge-v1:</code> followed by your qpf1 wallet address. The signature must verify against the key above under ML-DSA-65 (FIPS 204, empty context).</p></div>
+<div class="card"><span class="kick">02</span><b>Submit it</b><p>Paste it below or POST it to <code style="color:var(--or2)">/api/forge</code>. The node runs the same FIPS 204 verify it uses for every block. One attempt per second.</p></div>
+<div class="card"><span class="kick">03</span><b>Get paid</b><p>The first valid forgery wins. The tQPF bounty is credited instantly on-chain, the $QPF bounty is sent by the team, and the winner and signature are shown here forever.</p></div>
+</div>
+
+<h2>Submit a forgery</h2><p class="sub">Every attempt is counted publicly.</p>
+<div class="f"><input id="ad" placeholder="your qpf1… address (from /wallet)" spellcheck="false"><textarea id="sg" placeholder="signature, hex (3,309 bytes = 6,618 hex characters)" spellcheck="false"></textarea><div><button class="btn" onclick="sub()">Verify my forgery</button></div><div id="out"></div></div>
+
+<h2>Or script it</h2><p class="sub">Fetch the key, try your attack, submit.</p>
+<pre class="cmd">curl https://quantumproofchain.net/api/forge
+curl -X POST https://quantumproofchain.net/api/forge \
+  -H "content-type: application/json" \
+  -d '{"address":"qpf1…","sig":"&lt;hex&gt;"}'</pre>
+</main>
+<script src="/common.js"></script><script>chrome('/forge');
+const $ = (i) => document.getElementById(i), esc = (s) => String(s).replace(/</g, '&lt;');
+function since(t) { const s = Math.floor((Date.now() - t) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (d ? d + 'd ' : '') + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); }
+let F;
+async function load() { F = await (await fetch('/api/forge')).json(); $('pub').textContent = F.pub; $('kmeta').textContent = F.alg + ' · ' + F.pubBytes.toLocaleString() + '-byte public key · bounty address ' + F.address; draw(); }
+function draw() { if (!F) return; const b = F.bounty; $('st').innerHTML = [['Bounty', (b.qpf ? b.qpf + ' + ' : '') + b.tqpf.toLocaleString() + ' tQPF'], ['Forgery attempts', F.attempts.toLocaleString()], ['Unbroken for', F.winner ? '—' : since(F.created)], ['Status', F.winner ? '<span style="color:#ff5a4d">BROKEN</span>' : '<span style="color:var(--ok)">● HOLDING</span>']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join(''); }
+async function sub() { const r = await (await fetch('/api/forge', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address: $('ad').value.trim(), sig: $('sg').value.trim().toLowerCase() }) })).json();
+  $('out').innerHTML = r.ok ? '<span style="color:var(--ok)">✓ VALID FORGERY. You won. Contact @QuantumProofL1 for the $QPF bounty.</span>' : `<span style="color:#ff5a4d">✗ ${esc(r.result || r.error)}</span>`; load(); }
+load(); setInterval(draw, 1000); setInterval(load, 10000);
+</script></body></html>

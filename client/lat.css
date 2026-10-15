@@ -9,7 +9,7 @@ nav.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:r
 nav.top .wrap{display:flex;align-items:center;gap:28px;height:68px}
 .brand{text-transform:uppercase;display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:.14em;font-size:17px}
 .brand svg{width:30px;height:30px}
-nav.top .links{display:flex;gap:24px;font-size:14px;color:var(--mu);margin-left:12px}nav.top .links a:hover,nav.top .links a.on{color:var(--tx)}
+nav.top .links{display:flex;gap:18px;font-size:13.5px;white-space:nowrap;color:var(--mu);margin-left:12px}nav.top .links a:hover,nav.top .links a.on{color:var(--tx)}
 .sp{flex:1}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;font-weight:600;font-size:14px;border:1px solid var(--line2);background:transparent;color:var(--tx);cursor:pointer;font-family:inherit;transition:.2s}
 .btn:hover{border-color:var(--or);background:rgba(255,122,24,.08)}
@@ -17,7 +17,7 @@ nav.top .links{display:flex;gap:24px;font-size:14px;color:var(--mu);margin-left:
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .card{background:linear-gradient(180deg,rgba(255,122,24,.045),rgba(255,122,24,.01));border:1px solid var(--line);border-radius:16px}
 .kick{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.24em;color:var(--or);text-transform:uppercase}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--or2)}
+.pill{display:inline-flex;white-space:nowrap;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;border:1px solid var(--line2);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--or2)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pl 1.6s infinite}@keyframes pl{50%{opacity:.35}}
 input,select{background:#0a0705;border:1px solid var(--line2);color:var(--tx);border-radius:10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;width:100%;outline:none}input:focus{border-color:var(--or)}
 table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font-weight:500;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}

@@ -132,6 +132,48 @@ function pointsOf(addr) { const p = S.pts[addr] || { tx: 0, faucet: 0, bonus: 0 
   return { addr, name: v ? v.name : null, validator: !!v, txPts: p.tx * PT_TX, faucetPts: p.faucet * PT_FAUCET, validatorPts: val, bonus: p.bonus, total: p.tx * PT_TX + p.faucet * PT_FAUCET + val + p.bonus }; }
 function board() { const addrs = new Set(Object.keys(S.pts).concat(S.community.map((c) => c.addr))); return [...addrs].map(pointsOf).filter((x) => x.total > 0).sort((a, b) => b.total - a.total); }
 
+// ---------- quantum exposure scanner (BTC / ETH / SOL, public chain data) ----------
+// A wallet is "exposed" once its public key is visible on-chain: always for Solana (address = Ed25519 pubkey) and Bitcoin
+// Taproot (bc1p), and for Bitcoin/Ethereum addresses that have ever signed a spend/tx. Shor's algorithm recovers the
+// private key from an exposed public key.
+// addresses whose coins are known to sit in raw pay-to-pubkey outputs too old to page to (e.g. the genesis coinbase)
+const KNOWN_P2PK = new Set(['1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']);
+const SCAN_CACHE = new Map(); let PX = { t: 0, v: {} };
+async function prices() { if (Date.now() - PX.t < 60e3) return PX.v;
+  try { const r = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd')).json(); PX = { t: Date.now(), v: { BTC: r.bitcoin.usd, ETH: r.ethereum.usd, SOL: r.solana.usd } }; } catch {}
+  return PX.v; }
+const rpc = async (url, method, params) => (await (await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json()).result;
+function chainOf(a) { if (/^0x[0-9a-fA-F]{40}$/.test(a)) return 'ETH'; if (/^(bc1[02-9ac-hj-np-z]{11,87}|[13][1-9A-HJ-NP-Za-km-z]{25,34})$/.test(a)) return 'BTC'; if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)) return 'SOL'; return null; }
+async function scan(a) {
+  const chain = chainOf(a); if (!chain) throw new Error('not a Bitcoin, Ethereum or Solana address');
+  const c = SCAN_CACHE.get(a); if (c && Date.now() - c.t < 60e3) return c.v;
+  const px = await prices(); let bal = 0, exposed = false, reason = '', scheme = '', txs = null;
+  if (chain === 'SOL') { const r = await rpc('https://api.mainnet-beta.solana.com', 'getBalance', [a]); bal = (r && r.value || 0) / 1e9; exposed = true; scheme = 'Ed25519';
+    reason = 'A Solana address IS its Ed25519 public key. Every Solana wallet is exposed from the moment it exists.'; }
+  if (chain === 'ETH') { const R = 'https://ethereum-rpc.publicnode.com'; const [b, n] = await Promise.all([rpc(R, 'eth_getBalance', [a, 'latest']), rpc(R, 'eth_getTransactionCount', [a, 'latest'])]);
+    bal = Number(BigInt(b || '0x0')) / 1e18; txs = Number(BigInt(n || '0x0')); scheme = 'ECDSA secp256k1'; exposed = txs > 0;
+    reason = exposed ? 'This wallet has signed ' + txs.toLocaleString() + ' transaction' + (txs === 1 ? '' : 's') + '. Each one published its secp256k1 public key on-chain.' : 'This wallet has never sent a transaction, so its public key is still hidden behind a hash. The first send exposes it.'; }
+  if (chain === 'BTC') { const r = await (await fetch('https://mempool.space/api/address/' + a)).json(); const cs = r.chain_stats || {};
+    bal = ((cs.funded_txo_sum || 0) - (cs.spent_txo_sum || 0)) / 1e8; txs = cs.tx_count || 0; const tap = /^bc1p/.test(a); scheme = tap ? 'Schnorr secp256k1 (Taproot)' : 'ECDSA secp256k1';
+    let p2pk = KNOWN_P2PK.has(a); if (!p2pk && !tap && !(cs.spent_txo_count > 0) && /^1/.test(a)) { try { const tx = await (await fetch('https://mempool.space/api/address/' + a + '/txs')).json(); p2pk = tx.some((t) => t.vout.some((o) => o.scriptpubkey_type === 'p2pk')); } catch {} }
+    exposed = tap || p2pk || (cs.spent_txo_count || 0) > 0;
+    reason = p2pk ? 'Coins here were paid to a raw public key (P2PK, the format of the earliest Bitcoin blocks, including Satoshi’s). The key is in plain sight on-chain.' : tap ? 'Taproot (bc1p) addresses contain the public key directly. Exposed from the first deposit.' : exposed ? 'This address has spent coins, which publishes its public key on-chain. Any coins still sitting here are exposed.' : 'This address has never spent, so its public key is still hidden behind a hash. The first spend exposes it.'; }
+  const usd = px[chain] ? bal * px[chain] : null;
+  const v = { address: a, chain, scheme, exposed, reason, balance: bal, usd, txs, price: px[chain] || null, at: Date.now() };
+  SCAN_CACHE.set(a, { t: Date.now(), v }); return v;
+}
+
+// ---------- the Forge Challenge ----------
+// An ML-DSA-65 keypair is generated once; only the public key is kept. The secret key is never written anywhere, so
+// nobody (including the QuantumProof team) can sign for it. Produce a valid signature over the claim message and the
+// bounty is yours. Breaking it means breaking ML-DSA.
+if (!S.forge) { const k = crypto.generateKeyPairSync('ml-dsa-65');
+  S.forge = { pub: Buffer.from(k.publicKey.export({ format: 'jwk' }).pub, 'base64url').toString('hex'), created: Date.now(), attempts: 0, winner: null }; dirty = true; }
+const FORGE_TQPF = 100000, FORGE_QPF = process.env.FORGE_QPF || '';
+const forgeMsg = (addr) => 'quantumproof-forge-v1:' + addr;
+const forgeAddr = addrOf(S.forge.pub);
+const lastTry = new Map();
+
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
@@ -143,6 +185,7 @@ function stats() {
     alg: { blocks: 'ML-DSA-65', tx: 'ML-DSA-44', hash: 'SHA3-256' }, sizes: { ed25519Sig: 64, mldsa44Sig: 2420, mldsa65Sig: 3309, mldsa44Pub: 1312 }, mint: QPF_MINT };
 }
 http.createServer(async (req, res) => {
+  if (req.url.startsWith('/scan/')) { req.url = '/scan'; }
   const u = new URL(req.url, 'http://x'), p = u.pathname;
   try {
     if (p === '/api/stats') return send(res, 200, stats());
@@ -183,9 +226,17 @@ http.createServer(async (req, res) => {
     if (p === '/api/points/grant' && req.method === 'POST') { if (!ADMIN_KEY || req.headers['x-admin-key'] !== ADMIN_KEY) return send(res, 403, { error: 'forbidden' });
       const { address, points, note } = await body(req); if (!/^qpf1[0-9a-f]{40}$/.test(address || '') || !Number.isFinite(points)) return send(res, 400, { error: 'address + points' });
       const pp = ptOf(address); pp.bonus += points; pp.notes.push({ points, note: String(note || '').slice(0, 140), at: Date.now() }); dirty = true; return send(res, 200, { ok: true, bonus: pp.bonus }); }
+    if (p === '/api/scan') { const a = (u.searchParams.get('a') || '').trim(); try { return send(res, 200, await scan(a)); } catch (e) { return send(res, 400, { error: String(e.message || e) }); } }
+    if (p === '/api/forge' && req.method === 'GET') return send(res, 200, { alg: 'ML-DSA-65', pub: S.forge.pub, pubBytes: S.forge.pub.length / 2, address: forgeAddr, created: S.forge.created, attempts: S.forge.attempts, winner: S.forge.winner, bounty: { tqpf: FORGE_TQPF, qpf: FORGE_QPF }, message: 'quantumproof-forge-v1:<your qpf1 address>' });
+    if (p === '/api/forge' && req.method === 'POST') { const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress; if (Date.now() - (lastTry.get(ip) || 0) < 1000) return send(res, 429, { error: 'one attempt per second' }); lastTry.set(ip, Date.now());
+      const { address, sig } = await body(req); if (!/^qpf1[0-9a-f]{40}$/.test(address || '')) return send(res, 400, { error: 'address must be your qpf1 address' });
+      if (S.forge.winner) return send(res, 409, { error: 'already won', winner: S.forge.winner });
+      S.forge.attempts++; dirty = true; const ok = /^[0-9a-f]+$/.test(sig || '') && verify(forgeMsg(address), S.forge.pub, sig, 'ML-DSA-65');
+      if (!ok) return send(res, 200, { ok: false, attempts: S.forge.attempts, result: 'invalid signature. ML-DSA holds.' });
+      S.forge.winner = { address, at: Date.now(), sig }; acct(address).bal += FORGE_TQPF; return send(res, 200, { ok: true, result: 'VALID FORGERY', winner: S.forge.winner }); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

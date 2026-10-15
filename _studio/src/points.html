@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.col{position:absolute;top:210px;width:340px;height:330px;padding:26px 28px}.row{display:flex;justify-content:space-between;font-size:17px;padding:11px 0;border-bottom:1px solid rgba(255,122,24,.1)}.row span:last-child{font-family:'JetBrains Mono';color:#ffb347}
+.pop{position:absolute;font-family:'JetBrains Mono';font-weight:700;font-size:26px;color:#4dff9a;text-shadow:0 0 14px rgba(77,255,154,.6)}
+.lb{position:absolute;left:240px;width:800px;height:58px;display:grid;grid-template-columns:60px 1fr 160px;align-items:center;padding:0 24px;font-size:20px}
+.cap{position:absolute;left:0;right:0;top:64px;text-align:center}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">Testnet points · Season 0</div><div class="d" style="font-size:72px;line-height:1.05;margin-top:16px">Build the network.<br><span class="g">Get on the record.</span></div></div></div>
+<div id="s1" style="position:absolute;inset:0"><div class="cap"><div class="k">How you earn</div><div class="d" style="font-size:36px;margin-top:8px">Every action, tracked in public.</div></div><div id="cols"></div><div id="pops"></div></div>
+<div id="s2" style="position:absolute;inset:0"><div class="cap"><div class="k">Live leaderboard</div><div class="d" style="font-size:36px;margin-top:8px">quantumproofchain.net/points</div></div><div id="lbs"></div><div class="m mu" style="position:absolute;left:0;right:0;bottom:70px;text-align:center;font-size:15px">illustrative example · see the real board on the site</div></div>
+<div class="c" id="s3"><div><div class="d" style="font-size:50px;line-height:1.12">Points will be considered for<br><span class="g">mainnet genesis allocation.</span></div><div class="mu" style="font-size:21px;margin-top:22px">No amounts or conversion rate set. Farming may be excluded. tQPF has no monetary value.</div></div></div>
+<div class="c" id="s4"><div><div class="k">Season 0 is live</div><div class="d" style="font-size:62px;margin-top:14px">Run a node. Send a tx.<br><span class="g">Break something.</span></div><div class="m" style="font-size:26px;margin-top:28px;color:#ffb347">quantumproofchain.net/points</div><div class="m mu" style="font-size:18px;margin-top:10px">$QPF</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.35)=>cl((t-a)/f)*cl((b-t)/f);
+const C=[['VALIDATORS','Run a node',[['Attestation','+1'],['Block proposed','+4'],['Missed slot','−4']]],['USERS','Use the chain',[['Transfer sent','+2'],['Faucet claim','+5'],['Daily cap','25 tx']]],['BUILDERS','Break things',[['Bug report','bonus'],['API tools','bonus'],['Consensus bugs','top bonus']]]];
+$('cols').innerHTML=C.map(([k,t,r],i)=>`<div class="card col" id="c${i}" style="left:${90+i*375}px"><div class="k">${k}</div><div class="d" style="font-size:32px;margin-top:10px">${t}</div><div style="margin-top:14px">${r.map(([a,b])=>`<div class="row"><span class="mu">${a}</span><span>${b}</span></div>`).join('')}</div></div>`).join('');
+const PO=[[0,'+1'],[0,'+4'],[1,'+2'],[1,'+5'],[0,'+1'],[2,'+50'],[1,'+2'],[0,'+1']];
+$('pops').innerHTML=PO.map((p,i)=>`<div class="pop" id="p${i}">${p[1]}</div>`).join('');
+const N=[['Kyber-fan','qpf1a3…91c2'],['Lattice Larry','qpf17d…0be4'],['node.zero','qpf1c4…a264'],['qpf1e2…77f1','qpf1e2…77f1'],['ShorProof','qpf190…3d5a']];
+const S0=[420,388,301,276,240],S1=[431,512,309,281,377];
+$('lbs').innerHTML=N.map((n,i)=>`<div class="card lb" id="l${i}"><span class="m mu" id="r${i}"></span><span><b>${n[0]}</b> <span class="m mu" style="font-size:14px">${n[1]}</span></span><span class="m" style="text-align:right;color:#ffb347;font-weight:700" id="v${i}"></span></div>`).join('');
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+window.__seek=(t)=>{x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1;for(const[px,py]of P){x.strokeStyle=`rgba(255,122,24,${.05+.035*Math.sin(t*1.4+px*.012+py*.008)})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}
+ $('s0').style.opacity=win(t,0,2.6);$('s1').style.opacity=win(t,2.6,7.4);$('s2').style.opacity=win(t,7.4,12);$('s3').style.opacity=win(t,12,15.2);$('s4').style.opacity=e((t-15.2)/.5);
+ for(let i=0;i<3;i++){const p=e((t-2.8-i*.25)/.5);$('c'+i).style.opacity=p;$('c'+i).style.transform=`translateY(${(1-p)*40}px)`;}
+ PO.forEach(([c,v],i)=>{const t0=4+i*.42,lt=t-t0;const el=$('p'+i);el.style.opacity=lt>0&&lt<1?1-lt:0;el.style.left=(90+c*375+150+((i*53)%120)-60)+'px';el.style.top=(470-lt*90)+'px';});
+ const vAt=(tt)=>{const k=e((tt-8.6)/2.4);return S0.map((a,i)=>Math.round(a+(S1[i]-a)*k));},rk=(tt)=>{const v=vAt(tt),o=v.map((_,i)=>i).sort((a,b)=>v[b]-v[a]);return v.map((_,i)=>o.indexOf(i));},vals=vAt(t),R0=rk(t);let RS=vals.map(()=>0);for(let j=0;j<8;j++){const r=rk(t-j*.05);RS=RS.map((a,i)=>a+r[i]/8);}
+ N.forEach((_,i)=>{const r=R0[i],p=e((t-7.6-i*.12)/.4);$('l'+i).style.top=(180+RS[i]*72)+'px';$('l'+i).style.opacity=p;$('r'+i).textContent='#'+(r+1);$('v'+i).textContent=vals[i].toLocaleString()+' pts';$('l'+i).style.borderColor=r===0?'#ff7a18':'';});
+};window.__seek(0);
+</script>

@@ -233,6 +233,45 @@ Two commands to join:
 quantumproofchain.net/validators
 
 $QPF`],
+  ['qpf-points-18s.mp4', `QuantumProof testnet points, Season 0 is live.
+
+Run a validator, send transfers, report bugs. All tracked on a public leaderboard.
+
+Points will be considered for mainnet genesis allocation. No amounts set yet.
+
+quantumproofchain.net/points`],
+  ['qpf-checklist.png', `Day one checklist.
+
+Live:
+✓ $QPF on pump.fun
+✓ ML-DSA testnet + explorer
+✓ Browser wallet + faucet
+✓ Open validators
+✓ Points Season 0
+
+Next:
+→ Multi-node gossip, public RPC
+→ Audit
+→ Mainnet + 1:1 migration
+
+quantumproofchain.net`],
+  ['qpf-roadmap4.png', `QuantumProof roadmap. The quantum-safe L1 is being built in public.
+
+Phase 1 ✓ Launch, ML-DSA testnet, open validators, points
+Phase 2: Multi-node network + public RPC
+Phase 3: Audit + genesis spec
+Phase 4: Mainnet. $QPF → native QPF 1:1
+
+$QPF`],
+  ['qpf-vs-l1s.png', `$ETH, $SOL, $ZEC, $NEAR: all signed with elliptic curves. All broken by Shor's algorithm.
+
+$QPF signs every block and tx with ML-DSA.
+
+$QPF at their market caps:
+$NEAR: 72,186x
+$ZEC: 220,880x
+$SOL: 712,053x
+$ETH: 3,405,639x`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });

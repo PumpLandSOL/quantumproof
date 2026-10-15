@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quantum Exposure Scanner</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<meta property="og:title" content="Is your wallet quantum-exposed?"><meta property="og:description" content="Scan any Bitcoin, Ethereum or Solana address. See if its public key is already on-chain, waiting for Q-day.">
+<style>
+.hero{padding:70px 0 10px;text-align:center}.hero h1{font-size:clamp(40px,6.4vw,80px);letter-spacing:-.045em;line-height:1;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:720px;margin:18px auto 0}
+.box{display:flex;gap:10px;max-width:820px;margin:34px auto 0}.box input{flex:1;background:#0a0705;border:1px solid var(--line2);border-radius:12px;padding:17px 18px;color:var(--tx);font-family:'JetBrains Mono';font-size:14px}.box .btn{padding:0 28px;font-size:16px}
+.chips{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}.chips a{font-family:'JetBrains Mono';font-size:12px;color:var(--mu);border:1px solid var(--line);border-radius:99px;padding:6px 12px;cursor:pointer}.chips a:hover{color:var(--or2);border-color:var(--line2)}
+#res{max-width:880px;margin:38px auto 0}.rc{padding:38px 40px;position:relative;overflow:hidden}.rc.bad{border-color:rgba(255,90,77,.6);box-shadow:0 0 80px rgba(255,90,77,.14)}.rc.ok{border-color:rgba(77,255,154,.5)}
+.verdict{font-size:clamp(34px,5vw,58px);font-weight:700;letter-spacing:-.035em;line-height:1.02;margin-top:12px}.addr{font-family:'JetBrains Mono';font-size:13px;color:var(--mu);word-break:break-all;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:26px}.grid>div{border:1px solid var(--line);border-radius:12px;padding:16px}.grid .k{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}.grid .v{font-size:24px;font-weight:700;margin-top:6px}
+.why{color:var(--mu);font-size:16px;line-height:1.7;margin-top:22px}.acts{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+.cta{margin-top:22px;padding:22px 26px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}.cta p{color:var(--mu);font-size:15px;line-height:1.6;max-width:560px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:70px}.how .card{padding:24px}.how b{display:block;font-size:18px;margin:10px 0 8px}.how p{color:var(--mu);font-size:14px;line-height:1.65}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--line2);border-top-color:var(--or);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px;margin-right:10px}@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:800px){.grid,.how{grid-template-columns:1fr}.box{flex-direction:column}.box .btn{padding:14px}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// quantum exposure scanner</span>
+<h1>Is your wallet<br><span class="g">quantum-exposed?</span></h1>
+<p>Paste any Bitcoin, Ethereum or Solana address. We read the live chain and tell you whether its public key is already on-chain, the one thing Shor's algorithm needs to recover a private key.</p>
+<div class="box"><input id="a" placeholder="bc1… · 0x… · Solana address" spellcheck="false" autocomplete="off"><button class="btn" onclick="go()">Scan</button></div>
+<div class="chips"><a onclick="ex('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')">Satoshi's genesis address</a><a onclick="ex('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')">vitalik.eth</a><a onclick="ex('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh')">a Bitcoin whale</a></div></section>
+<div id="res"></div>
+<section class="how">
+<div class="card"><span class="kick">01</span><b>Your public key leaks</b><p>Solana addresses are Ed25519 public keys. Bitcoin and Ethereum reveal the public key the first time a wallet signs a spend. Taproot shows it from day one.</p></div>
+<div class="card"><span class="kick">02</span><b>Q-day reverses it</b><p>A large fault-tolerant quantum computer running Shor's algorithm derives the private key from the public key. Every exposed wallet becomes spendable by someone else.</p></div>
+<div class="card"><span class="kick">03</span><b>Lattices don't leak</b><p>QuantumProof signs with ML-DSA (NIST FIPS 204). There's no known quantum attack on it, and no elliptic-curve key ever touches the chain.</p></div>
+</section>
+</main>
+<script src="/common.js"></script><script>chrome('/scan');
+const $ = (i) => document.getElementById(i), esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+const usd = (x) => x == null ? '—' : '$' + (x >= 1e6 ? (x / 1e6).toFixed(2) + 'M' : x >= 1e3 ? Math.round(x).toLocaleString() : x.toFixed(2));
+const NAME = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana' };
+function ex(a) { $('a').value = a; go(); }
+async function go() { const a = $('a').value.trim(); if (!a) return; history.replaceState(null, '', '/scan/' + encodeURIComponent(a));
+  $('res').innerHTML = '<div class="card rc"><span class="spin"></span><span class="m mu">reading the live chain…</span></div>';
+  let r; try { r = await (await fetch('/api/scan?a=' + encodeURIComponent(a))).json(); } catch { r = { error: 'network error' }; }
+  if (r.error) { $('res').innerHTML = `<div class="card rc"><span class="m" style="color:var(--bad,#ff5a4d)">${esc(r.error)}</span></div>`; return; }
+  const v = r.exposed, amt = r.balance.toLocaleString(undefined, { maximumFractionDigits: 6 }) + ' ' + r.chain;
+  const share = v ? `My ${NAME[r.chain]} wallet is quantum-exposed. ${r.usd ? usd(r.usd) + ' sits behind a public key Shor’s algorithm can reverse.' : 'Its public key is already on-chain.'}\n\nCheck yours: quantumproofchain.net/scan\n\n$QPF` : `My ${NAME[r.chain]} wallet's public key is still hidden. The first transaction exposes it.\n\nCheck yours: quantumproofchain.net/scan\n\n$QPF`;
+  $('res').innerHTML = `<div class="card rc ${v ? 'bad' : 'ok'}"><span class="kick" style="color:${v ? '#ff5a4d' : 'var(--ok)'}">${NAME[r.chain]} · ${esc(r.scheme)}</span>
+   <div class="verdict">${v ? '<span style="color:#ff5a4d">EXPOSED.</span> Public key is on-chain.' : '<span style="color:var(--ok)">Hidden, for now.</span>'}</div>
+   <div class="addr">${esc(r.address)}</div>
+   <div class="grid"><div><div class="k">Balance</div><div class="v">${amt}</div></div><div><div class="k">${v ? 'Value at risk on Q-day' : 'Value behind a hash'}</div><div class="v" style="color:${v ? '#ff5a4d' : 'var(--tx)'}">${usd(r.usd)}</div></div><div><div class="k">${r.txs == null ? 'Signature scheme' : 'Transactions'}</div><div class="v">${r.txs == null ? esc(r.scheme) : r.txs.toLocaleString()}</div></div></div>
+   <p class="why">${esc(r.reason)}</p>
+   <div class="acts"><a class="btn" target="_blank" href="https://x.com/intent/tweet?text=${encodeURIComponent(share)}">Share on X</a><button class="btn" style="background:none;border:1px solid var(--line2);color:var(--tx)" onclick="copy(location.href)">Copy link</button></div></div>
+   <div class="card cta"><p><b style="color:var(--tx)">QuantumProof never exposes an elliptic-curve key.</b> Every wallet, transaction and block is signed with ML-DSA. Make a quantum-safe wallet in your browser in 2 seconds.</p><a class="btn" href="/wallet">Open the wallet →</a></div>`; }
+const pre = decodeURIComponent(location.pathname.split('/scan/')[1] || ''); if (pre) { $('a').value = pre; go(); }
+$('a').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+</script></body></html>
