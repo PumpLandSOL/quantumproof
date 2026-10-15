@@ -441,3 +441,14 @@ Coming to mainnet.
 
 $QPF
 ```
+
+## 36. qpf-dex-live-21s.mp4
+```
+We previewed QuantumDEX. Now it's live on testnet.
+
+The first DEX where every swap is signed with ML-DSA in your browser and verified before it touches the pool. Swap, add liquidity, earn fees.
+
+quantumproofchain.net/dex
+
+$QPF
+```
