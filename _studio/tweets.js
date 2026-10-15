@@ -311,6 +311,22 @@ Every Solana wallet is an Ed25519 public key. Q-day reverses it.
 Sign once in Phantom, once with ML-DSA, and your wallet is bound to a post-quantum address. Your $QPF sets your tier.
 
 quantumproofchain.net/lifeboat`],
+  ['qpf-vaults-22s.mp4', `Quantum Vaults are live.
+
+Post-quantum multisig: create a 2-of-3 with your team, and every approval is an ML-DSA signature over the exact recipient and amount.
+
+No single key. No elliptic curve.
+
+quantumproofchain.net/vault
+
+$QPF`],
+  ['qpf-node-22s.mp4', `Your browser tab is now a validator.
+
+Name it, press start. It generates an ML-DSA-65 key, stakes, and signs every QuantumProof block with a 3,309-byte post-quantum signature.
+
+No install. Live leaderboard.
+
+quantumproofchain.net/node`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });

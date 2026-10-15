@@ -463,3 +463,27 @@ Sign once in Phantom, once with ML-DSA, and your wallet is bound to a post-quant
 
 quantumproofchain.net/lifeboat
 ```
+
+## 38. qpf-vaults-22s.mp4
+```
+Quantum Vaults are live.
+
+Post-quantum multisig: create a 2-of-3 with your team, and every approval is an ML-DSA signature over the exact recipient and amount.
+
+No single key. No elliptic curve.
+
+quantumproofchain.net/vault
+
+$QPF
+```
+
+## 39. qpf-node-22s.mp4
+```
+Your browser tab is now a validator.
+
+Name it, press start. It generates an ML-DSA-65 key, stakes, and signs every QuantumProof block with a 3,309-byte post-quantum signature.
+
+No install. Live leaderboard.
+
+quantumproofchain.net/node
+```

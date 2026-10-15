@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quantum Vaults · QuantumProof</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<meta property="og:title" content="Quantum Vaults: post-quantum multisig"><meta property="og:description" content="k-of-n multisig vaults where every approval is an ML-DSA signature. Live on QuantumProof testnet.">
+<style>
+.hero{padding:64px 0 6px;text-align:center}.hero h1{font-size:clamp(40px,6.2vw,80px);letter-spacing:-.045em;line-height:1;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:760px;margin:18px auto 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:38px}.kpis .card{padding:18px 20px}.k,.lbl{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}.kpis .v{font-size:28px;font-weight:700;margin-top:6px}
+.lay{display:grid;grid-template-columns:420px 1fr;gap:20px;margin-top:22px;align-items:start}
+.pn{padding:22px 24px}.pn h3{font-size:20px;letter-spacing:-.02em;margin-bottom:12px}
+input,textarea,select{width:100%;background:#0a0705;border:1px solid var(--line2);border-radius:10px;padding:12px 13px;color:var(--tx);font-family:'JetBrains Mono';font-size:12.5px;margin-top:6px;outline:0}textarea{height:96px;resize:vertical}
+.f{margin-top:12px}.row2{display:flex;gap:10px;align-items:center}.full{width:100%;justify-content:center;margin-top:16px;padding:14px}
+.list{display:grid;gap:12px}.vc{padding:22px 24px}.vh{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}.vh .nm{font-size:24px;font-weight:700;letter-spacing:-.02em}.th{font-family:'JetBrains Mono';font-size:12px;color:var(--or2);border:1px solid var(--line2);border-radius:99px;padding:5px 11px}
+.bal{font-size:34px;font-weight:700;letter-spacing:-.03em}.ad{font-family:'JetBrains Mono';font-size:12px;color:var(--mu);word-break:break-all;margin-top:6px}
+.sg{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.sg span{font-family:'JetBrains Mono';font-size:11.5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line)}.sg .me{border-color:var(--ok);color:var(--ok)}
+.pr{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.pr.ex{border-color:rgba(77,255,154,.45)}
+.bar{height:6px;border-radius:9px;background:#1a120c;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--or2),var(--ok))}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.acts input{width:150px;margin:0}
+#msg{font-family:'JetBrains Mono';font-size:12.5px;line-height:1.6;margin-top:12px;word-break:break-all}.okc{color:var(--ok)}.bad{color:#ff5a4d}
+.empty{padding:34px;text-align:center;color:var(--mu)}
+@media(max-width:980px){.lay{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// quantum vaults · post-quantum multisig</span>
+<h1>Multisig that survives<br><span class="g">Q-day.</span></h1>
+<p>Create a k-of-n vault with your team. Every approval is an ML-DSA-44 signature over the exact recipient and amount. No elliptic-curve key anywhere, nothing for Shor's algorithm to reverse.</p></section>
+<div class="kpis" id="kp"></div>
+<div class="lay">
+<div>
+ <div class="card pn"><h3>Create a vault</h3>
+  <div class="lbl">You (signer 1)</div><div class="ad" id="me">—</div>
+  <div class="f"><div class="lbl">Vault name</div><input id="vn" placeholder="Treasury" maxlength="32"></div>
+  <div class="f"><div class="lbl">Co-signers · one qpf1 address per line</div><textarea id="vs" placeholder="qpf1…&#10;qpf1…" spellcheck="false"></textarea></div>
+  <div class="f"><div class="lbl">Approvals required</div><select id="vt"></select></div>
+  <button class="btn pri full" id="mk">Create vault · sign ML-DSA-44</button><div id="msg"></div></div>
+ <div class="card pn" style="margin-top:12px"><div class="lbl" style="margin-bottom:8px">How it works</div><p style="color:var(--mu);font-size:14px;line-height:1.7">The vault address is a SHA3-256 hash of its signers and threshold, so no single key controls it. Anyone deposits with a normal transfer. To withdraw, a signer proposes a recipient and amount, and the funds move the moment enough signers approve. The execution lands in the next block with every approval counted.</p></div>
+</div>
+<div class="list" id="vl"></div>
+</div>
+</main>
+<script src="/common.js"></script><script type="module">
+import { ml_dsa44 } from 'https://cdn.jsdelivr.net/npm/@noble/post-quantum@0.2.1/ml-dsa.js/+esm';
+import { sha3_256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.5.0/sha3.js/+esm';
+chrome('/vault');
+const $ = (i) => document.getElementById(i), hex = (u) => [...u].map((b) => b.toString(16).padStart(2, '0')).join(''), unhex = (h) => new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16)));
+const canon = (o) => JSON.stringify(o, Object.keys(o).sort()), enc = (s) => new TextEncoder().encode(s), CH = 'quantumproof-testnet-1', FEE = 0.001;
+const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])), n = (x) => (+x).toLocaleString(undefined, { maximumFractionDigits: 3 });
+let W = null; try { const s = localStorage.getItem('qpf_seed'); if (s) { const k = ml_dsa44.keygen(unhex(s)); const pub = hex(k.publicKey); W = { sk: k.secretKey, pub, addr: 'qpf1' + hex(sha3_256(unhex(pub))).slice(0, 40) }; } } catch {}
+const sign = (m) => hex(ml_dsa44.sign(W.sk, enc(m)));
+const post = async (u, b) => (await fetch(u, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) })).json();
+const say = (h, c = '') => { $('msg').innerHTML = `<span class="${c}">${h}</span>`; };
+$('me').textContent = W ? W.addr : 'No wallet in this browser yet.';
+if (!W) { $('mk').textContent = 'Create a wallet first'; $('mk').onclick = () => location.href = '/wallet'; }
+const sigs = () => [...new Set([W && W.addr, ...$('vs').value.split(/\s+/).filter(Boolean)].filter(Boolean))];
+function opts() { const k = Math.max(2, sigs().length), cur = +$('vt').value || 2; $('vt').innerHTML = Array.from({ length: k }, (_, i) => `<option value="${i + 1}" ${i + 1 === Math.min(cur, k) ? 'selected' : ''}>${i + 1} of ${k}</option>`).join(''); }
+$('vs').oninput = opts; opts();
+if (W) $('mk').onclick = async () => { const signers = sigs().sort(), threshold = +$('vt').value, name = $('vn').value.trim() || 'Vault', salt = hex(crypto.getRandomValues(new Uint8Array(8)));
+  if (signers.some((s) => !/^qpf1[0-9a-f]{40}$/.test(s))) return say('Every co-signer must be a qpf1 address.', 'bad'); if (signers.length < 2) return say('Add at least one co-signer.', 'bad');
+  say('signing ML-DSA-44…'); const r = await post('/api/vault/create', { name, signers, threshold, salt, from: W.addr, pub: W.pub, sig: sign(canon({ chain: CH, kind: 'vault-create', name, salt, signers, threshold })) });
+  if (r.error) return say(esc(r.error), 'bad'); say(`Vault created · ${threshold}-of-${signers.length} · ${r.vault.addr}`, 'okc'); $('vn').value = ''; $('vs').value = ''; opts(); load(); };
+window.deposit = async (va) => { const amt = +$('d_' + va).value; if (!(amt > 0)) return toast('Enter an amount');
+  const ac = await (await fetch('/api/account/' + W.addr)).json(); const t = { from: W.addr, to: va, amount: amt, nonce: ac.nonce, fee: FEE, pub: W.pub };
+  t.sig = sign(canon({ amount: t.amount, chain: CH, fee: FEE, from: t.from, nonce: t.nonce, to: t.to })); const r = await post('/api/tx', t);
+  toast(r.error ? r.error : 'Deposit signed · lands in the next block'); setTimeout(load, 4500); };
+window.propose = async (va, pid) => { const to = $('pt_' + va).value.trim(), amount = +$('pa_' + va).value, memo = $('pm_' + va).value.trim().slice(0, 80);
+  if (!/^qpf1[0-9a-f]{40}$/.test(to) || !(amount > 0)) return toast('Recipient qpf1 address + amount');
+  const r = await post('/api/vault/propose', { vault: va, pid, to, amount, memo, from: W.addr, pub: W.pub, sig: sign(canon({ amount, chain: CH, kind: 'vault-propose', memo, pid, to, vault: va })), asig: sign(canon({ amount, chain: CH, kind: 'vault-approve', pid, to, vault: va })) });
+  toast(r.error || (r.proposal.status === 'executed' ? 'Executed' : 'Proposed + approved by you')); load(); };
+window.approveP = async (va, pid, to, amount) => { const r = await post('/api/vault/approve', { vault: va, pid, from: W.addr, pub: W.pub, sig: sign(canon({ amount, chain: CH, kind: 'vault-approve', pid, to, vault: va })) });
+  toast(r.error || (r.proposal.status === 'executed' ? 'Threshold met · executed on-chain' : 'Approved')); load(); };
+function card(v) { const mine = W && v.signers.includes(W.addr);
+  const props = v.proposals.slice().reverse().slice(0, 6).map((p) => { const done = p.status === 'executed', mineA = W && p.approvals.some((a) => a.by === W.addr);
+    return `<div class="pr ${done ? 'ex' : ''}"><div><div class="m" style="font-size:13px">#${p.id} · <b>${n(p.amount)} tQPF</b> → ${short(p.to, 10, 4)}${p.memo ? ' · <span class="dim">' + esc(p.memo) + '</span>' : ''}</div>
+     <div class="m dim" style="font-size:11.5px;margin-top:4px">${p.approvals.length} of ${v.threshold} ML-DSA approvals ${done ? '· <span class="okc">EXECUTED</span>' : ''}</div><div class="bar"><i style="width:${Math.min(100, p.approvals.length / v.threshold * 100)}%"></i></div></div>
+     <div>${done ? '<span class="okc m" style="font-size:12px">✓ on-chain</span>' : mine && !mineA ? `<button class="btn pri" onclick="approveP('${v.addr}',${p.id},'${p.to}',${p.amount})">Approve</button>` : '<span class="m dim" style="font-size:12px">waiting</span>'}</div></div>`; }).join('');
+  return `<div class="card vc"><div class="vh"><div><div class="nm">${esc(v.name)}</div><div class="ad">${v.addr} <a class="okc" onclick="copy('${v.addr}')" style="cursor:pointer">copy</a></div></div><span class="th">${v.threshold}-of-${v.signers.length} · ML-DSA-44</span></div>
+   <div style="display:flex;justify-content:space-between;align-items:end;margin-top:16px;flex-wrap:wrap;gap:10px"><div><div class="lbl">Balance</div><div class="bal">${n(v.balance)} <span style="font-size:18px;color:var(--mu)">tQPF</span></div></div><div class="m dim" style="font-size:12px">${v.executed} executed · ${v.proposals.length} proposal${v.proposals.length === 1 ? '' : 's'}</div></div>
+   <div class="sg">${v.signers.map((s) => `<span class="${W && s === W.addr ? 'me' : ''}">${W && s === W.addr ? 'you · ' : ''}${short(s, 8, 4)}</span>`).join('')}</div>
+   ${mine ? `<div class="acts"><input id="d_${v.addr}" placeholder="deposit tQPF" inputmode="decimal"><button class="btn" onclick="deposit('${v.addr}')">Deposit</button></div>
+   <div class="acts"><input id="pt_${v.addr}" placeholder="to qpf1…" style="flex:2;min-width:200px"><input id="pa_${v.addr}" placeholder="amount" inputmode="decimal"><input id="pm_${v.addr}" placeholder="memo"><button class="btn pri" onclick="propose('${v.addr}',${v.proposals.length})">Propose withdrawal</button></div>` : ''}
+   ${props}</div>`; }
+async function load() { const all = await (await fetch('/api/vaults')).json(), mine = W ? await (await fetch('/api/vaults?member=' + W.addr)).json() : { vaults: [] };
+  $('kp').innerHTML = [['Vaults', n(all.count)], ['tQPF secured', n(all.held)], ['Withdrawals executed', n(all.executed)], ['Signature scheme', 'ML-DSA-44']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  const act = document.activeElement && document.activeElement.closest && document.activeElement.closest('#vl'); if (act) return;
+  $('vl').innerHTML = mine.vaults.length ? mine.vaults.map(card).join('') : `<div class="card empty">${W ? 'You are not a signer on any vault yet. Create one on the left.' : 'Open the <a class="okc" href="/wallet">Wallet</a> to get a quantum-safe key, then create a vault.'}</div>`; }
+load(); setInterval(load, 5000);
+</script></body></html>

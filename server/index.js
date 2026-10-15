@@ -112,7 +112,7 @@ function finalize() {
 }
 setInterval(startSlot, SLOT_MS);
 const regBody = (o) => canon({ chain: CHAIN_ID, kind: o.kind, name: o.name || '', pub: o.pub });
-const pubVal = (c) => ({ name: c.name, addr: c.addr, stake: c.stake, produced: c.produced || 0, attested: c.attested || 0, missed: c.missed || 0, rewards: +(c.rewards || 0).toFixed(3), joined: c.joined, online: online(c), lastSeen: c.lastSeen || 0 });
+const pubVal = (c) => ({ browser: !!c.browser, name: c.name, addr: c.addr, stake: c.stake, produced: c.produced || 0, attested: c.attested || 0, missed: c.missed || 0, rewards: +(c.rewards || 0).toFixed(3), joined: c.joined, online: online(c), lastSeen: c.lastSeen || 0 });
 const coreVal = (v) => ({ name: v.name, addr: v.addr, produced: v.produced, attested: v.attested || 0, rewards: +(v.rewards || 0).toFixed(3), pubBytes: v.pub.length / 2 });
 
 // ---------- live feed (SSE) ----------
@@ -259,6 +259,58 @@ async function boardBoat(o) {
 const boatState = () => { const by = {}; for (const t of TIERS) by[t[0]] = 0; let held = 0; for (const b of S.boats) { by[b.tier]++; held += b.held; }
   return { seats: S.boats.length, qpfMigrated: held, tiers: TIERS.map(([name, min, grant, pts]) => ({ name, min, grant, pts, count: by[name] })), manifest: S.boats.slice(-50).reverse(), mint: QPF_MINT }; };
 
+// ---------- post-quantum multisig vaults (k-of-n ML-DSA-44) ----------
+// A vault address is derived from its config (sha3 of signers + threshold + salt), so no key can ever spend it directly.
+// Anyone can deposit with a normal transfer. Withdrawals need a proposal plus approvals from `threshold` distinct signers,
+// each an ML-DSA-44 signature over the exact (vault, pid, to, amount). The execution lands in the next block.
+S.vaults = S.vaults || {};
+const vCreateBody = (o) => canon({ chain: CHAIN_ID, kind: 'vault-create', name: o.name, salt: o.salt, signers: o.signers, threshold: o.threshold });
+const vPropBody = (o) => canon({ amount: o.amount, chain: CHAIN_ID, kind: 'vault-propose', memo: o.memo || '', pid: o.pid, to: o.to, vault: o.vault });
+const vApproveBody = (v, p) => canon({ amount: p.amount, chain: CHAIN_ID, kind: 'vault-approve', pid: p.id, to: p.to, vault: v.addr });
+const ADDR_RE = /^qpf1[0-9a-f]{40}$/;
+function pqAuth(o, msg) { if (!ADDR_RE.test(o.from || '')) return 'bad signer address';
+  if (!/^[0-9a-f]{2624}$/.test(o.pub || '') || addrOf(o.pub) !== o.from) return 'pubkey must be the ML-DSA-44 key for from';
+  if (!/^[0-9a-f]{4840}$/.test(o.sig || '') || !verify(msg, o.pub, o.sig, 'ML-DSA-44')) return 'invalid ML-DSA-44 signature'; S.sigsVerified++; return null; }
+const vaultView = (v) => ({ ...v, balance: (S.accounts[v.addr] || {}).bal || 0 });
+function vaultOp(kind, o) {
+  if (kind === 'create') {
+    if (!/^[A-Za-z0-9 ._'-]{2,32}$/.test(o.name || '')) return 'name: 2-32 characters';
+    if (!Array.isArray(o.signers) || o.signers.length < 2 || o.signers.length > 7 || !o.signers.every((s) => ADDR_RE.test(s))) return '2 to 7 qpf1 signer addresses';
+    o.signers = [...new Set(o.signers)].sort(); if (o.signers.length < 2) return 'signers must be distinct';
+    if (!Number.isInteger(o.threshold) || o.threshold < 1 || o.threshold > o.signers.length) return 'threshold must be 1..' + o.signers.length;
+    if (!/^[0-9a-f]{16}$/.test(o.salt || '')) return 'bad salt';
+    if (!o.signers.includes(o.from)) return 'creator must be one of the signers';
+    const e = pqAuth(o, vCreateBody(o)); if (e) return e;
+    const addr = 'qpf1' + sha3(vCreateBody(o)).slice(0, 40); if (S.vaults[addr]) return 'vault exists';
+    const v = S.vaults[addr] = { addr, name: o.name, signers: o.signers, threshold: o.threshold, creator: o.from, created: Date.now(), proposals: [], executed: 0 };
+    dexPending.push({ hash: sha3(vCreateBody(o) + o.sig), from: o.from, to: addr, amount: 0, fee: 0, nonce: 0, kind: 'vault-create', detail: o.threshold + '-of-' + o.signers.length + ' ML-DSA vault "' + o.name + '"', sigBytes: 2420 });
+    dirty = true; return { ok: true, vault: vaultView(v) };
+  }
+  const v = S.vaults[o.vault]; if (!v) return 'unknown vault'; if (!v.signers.includes(o.from)) return 'not a signer of this vault';
+  if (kind === 'propose') {
+    if (!ADDR_RE.test(o.to || '')) return 'bad recipient'; if (!(o.amount > 0) || !isFinite(o.amount)) return 'bad amount';
+    if (o.pid !== v.proposals.length) return 'bad pid (expected ' + v.proposals.length + ')'; o.memo = String(o.memo || '').slice(0, 80);
+    const e = pqAuth(o, vPropBody(o)); if (e) return e;
+    const p = { id: o.pid, to: o.to, amount: o.amount, memo: o.memo, by: o.from, at: Date.now(), approvals: [], status: 'open' }; v.proposals.push(p);
+    o.pid = p.id; return approve(v, p, o, true);
+  }
+  if (kind === 'approve') { const p = v.proposals[o.pid]; if (!p) return 'unknown proposal'; if (p.status !== 'open') return 'proposal is ' + p.status;
+    if (p.approvals.some((a) => a.by === o.from)) return 'already approved'; const e = pqAuth(o, vApproveBody(v, p)); if (e) return e; return approve(v, p, o, false); }
+  return 'bad op';
+}
+function approve(v, p, o, viaPropose) {
+  if (viaPropose) { // proposer's approval is a second signature over the approve body
+    if (!/^[0-9a-f]{4840}$/.test(o.asig || '') || !verify(vApproveBody(v, p), o.pub, o.asig, 'ML-DSA-44')) { v.proposals.pop(); return 'invalid approval signature'; } S.sigsVerified++; }
+  const a = acct(v.addr), last = p.approvals.length + 1 >= v.threshold;
+  if (last && a.bal < p.amount + FEE - 1e-9) { if (viaPropose) v.proposals.pop(); return 'vault balance too low: has ' + a.bal + ' tQPF, needs ' + (p.amount + FEE); }
+  p.approvals.push({ by: o.from, at: Date.now(), sig: (viaPropose ? o.asig : o.sig).slice(0, 32) + '…' });
+  if (last) {
+    a.bal -= p.amount + FEE; acct(p.to).bal += p.amount; p.status = 'executed'; p.execAt = Date.now(); v.executed++;
+    p.hash = sha3(vApproveBody(v, p) + p.approvals.map((x) => x.by).join(''));
+    dexPending.push({ hash: p.hash, from: v.addr, to: p.to, amount: p.amount, fee: FEE, nonce: p.id, kind: 'vault-execute', detail: p.approvals.length + '-of-' + v.signers.length + ' ML-DSA approvals' + (p.memo ? ' · ' + p.memo : ''), sigBytes: 2420 * p.approvals.length }); }
+  dirty = true; return { ok: true, proposal: p, vault: vaultView(v) };
+}
+
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
@@ -301,7 +353,7 @@ http.createServer(async (req, res) => {
       if (S.community.length >= MAX_COMMUNITY) return send(res, 403, { error: 'validator set full' });
       if (S.validators.concat(S.community).some((x) => x.name.toLowerCase() === o.name.toLowerCase())) return send(res, 400, { error: 'name taken' });
       const ac = acct(addr); if (ac.bal < STAKE) return send(res, 400, { error: 'need ' + STAKE + ' tQPF at ' + addr + ' to stake (balance ' + ac.bal + ')' });
-      ac.bal -= STAKE; S.community.push({ name: o.name, pub: o.pub, addr, stake: STAKE, joined: Date.now(), lastSeen: Date.now(), produced: 0, attested: 0, missed: 0, rewards: 0 }); dirty = true;
+      ac.bal -= STAKE; S.community.push({ name: o.name, pub: o.pub, addr, stake: STAKE, browser: !!o.browser, joined: Date.now(), lastSeen: Date.now(), produced: 0, attested: 0, missed: 0, rewards: 0 }); dirty = true;
       return send(res, 200, { ok: true, addr, stake: STAKE }); }
     if (p === '/api/validator/exit' && req.method === 'POST') { const o = await body(req); o.kind = 'exit-validator'; const i = S.community.findIndex((x) => x.pub === o.pub);
       if (i < 0) return send(res, 404, { error: 'unknown validator' }); if (!verify(regBody(o), o.pub, o.sig || '', 'ML-DSA-65')) return send(res, 400, { error: 'invalid ML-DSA-65 signature' });
@@ -328,9 +380,13 @@ http.createServer(async (req, res) => {
     if (p === '/api/lifeboat/msg') return send(res, 200, { message: boardMsg(u.searchParams.get('sol') || '', u.searchParams.get('qpf') || '') });
     if (p.startsWith('/api/lifeboat/seat/')) { const k = decodeURIComponent(p.slice(19)); const b = S.boats.find((x) => x.sol === k || x.qpf === k); return b ? send(res, 200, b) : send(res, 404, { error: 'no seat' }); }
     if (p === '/api/lifeboat' && req.method === 'POST') { try { const r = await boardBoat(await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); } catch (e) { return send(res, 502, { error: String(e.message || e) }); } }
+    if (p === '/api/vaults') { const m = u.searchParams.get('member'); const all = Object.values(S.vaults); const list = (m ? all.filter((v) => v.signers.includes(m)) : all).sort((a, b) => b.created - a.created).slice(0, 50).map(vaultView);
+      return send(res, 200, { count: all.length, held: all.reduce((s, v) => s + ((S.accounts[v.addr] || {}).bal || 0), 0), executed: all.reduce((s, v) => s + v.executed, 0), vaults: list }); }
+    if (p.startsWith('/api/vault/') && req.method === 'GET') { const v = S.vaults[p.slice(11)]; return v ? send(res, 200, vaultView(v)) : send(res, 404, { error: 'unknown vault' }); }
+    if (/^\/api\/vault\/(create|propose|approve)$/.test(p) && req.method === 'POST') { const r = vaultOp(p.slice(11), await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html', '/vault': 'vault.html', '/node': 'node.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }
