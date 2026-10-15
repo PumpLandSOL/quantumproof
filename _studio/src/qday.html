@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.row{position:absolute;left:170px;right:170px;height:84px;display:grid;grid-template-columns:200px 1fr 300px;align-items:center;font-family:'JetBrains Mono';font-size:17px;padding:0 26px}
+.big{font-size:84px;line-height:1.02}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">Fact</div><div class="d big" style="font-size:62px;margin-top:16px">Your public key is<br><span class="g">already on-chain.</span></div></div></div>
+<div id="s1" style="position:absolute;inset:0"><div class="k" style="position:absolute;top:90px;left:0;right:0;text-align:center" id="k1">archived forever</div><div id="rows"></div></div>
+<div class="c" id="s2"><div><div class="m" id="qd" style="font-size:150px;font-weight:700;color:#ff5a4d;letter-spacing:.06em">Q-DAY</div><div class="mu" style="font-size:24px;margin-top:10px">Shor's algorithm turns public keys back into private keys.</div></div></div>
+<div class="c" id="s3"><div><div class="d big">One chain has<br><span class="g">nothing to crack.</span></div><div class="m mu" style="font-size:20px;margin-top:22px">ML-DSA (FIPS 204) on every block, vote and transaction.</div></div></div>
+<div class="c" id="s4"><div><svg viewBox="0 0 40 40" style="width:150px;height:150px" id="mk"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".55" stop-color="#ff7a18"/><stop offset="1" stop-color="#ff3d00"/></linearGradient></defs><path d="M20 3 35 11.5v17L20 37 5 28.5v-17Z" fill="none" stroke="url(#lg)" stroke-width="2.4"/><path d="M20 3v34M5 11.5l30 17M35 11.5l-30 17" stroke="url(#lg)" stroke-width="1.2" opacity=".55"/><circle cx="20" cy="20" r="4.2" fill="url(#lg)"/></svg>
+<div class="d" style="font-size:72px;margin-top:20px">QUANTUM<span class="g">PROOF</span></div><div class="m mu" style="font-size:22px;margin-top:14px">The chain that survives Q-day · $QPF</div><div class="m" style="font-size:22px;margin-top:10px;color:#ffb347">quantumproofchain.net</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.35)=>cl((t-a)/f)*cl((b-t)/f);
+let sd=11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;const hx=(n)=>Array.from({length:n},()=>'0123456789abcdef'[Math.floor(r()*16)]).join('');
+const CH=[['BITCOIN','secp256k1'],['ETHEREUM','secp256k1'],['SOLANA','Ed25519'],['NEAR','Ed25519']],PK=CH.map(()=>hx(40)),SK=CH.map(()=>hx(40));
+$('rows').innerHTML=CH.map(([a,b],i)=>`<div class="row card" id="r${i}" style="top:${170+i*104}px"><b style="font-size:22px">${a}</b><span id="v${i}"></span><span id="st${i}" style="text-align:right"></span></div>`).join('');
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+function bg(t){x.fillStyle='#050403';x.fillRect(0,0,1280,720);const red=t>5.4&&t<9.6,glow=t>=9.6?e((t-9.6)/1.2):0;x.lineWidth=1;
+ for(const[px,py]of P){const d=Math.hypot(px-640,py-360)/700;const a=red?.05+.08*Math.abs(Math.sin(t*9+px*.01)):.06+glow*.22*cl(1-d+.2*Math.sin(t*2+d*8));
+  x.strokeStyle=red?`rgba(255,70,60,${a})`:`rgba(255,122,24,${a})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}}
+window.__seek=(t)=>{bg(t);
+ $('s0').style.opacity=win(t,0,2.4);$('s1').style.opacity=win(t,2.4,7.6);$('s2').style.opacity=win(t,7.6,9.8,.15);$('s3').style.opacity=win(t,9.8,12.6);$('s4').style.opacity=e((t-12.6)/.5);
+ $('k1').textContent=t<5.2?'public keys · archived forever':'running shor\'s algorithm…';$('k1').style.color=t<5.2?'':'#ff5a4d';
+ for(let i=0;i<4;i++){const p=e((t-2.6-i*.25)/.4),cr=t>=5.4+i*.45;$('r'+i).style.opacity=p;$('r'+i).style.transform=`translateX(${(1-p)*-60+(cr&&t<5.7+i*.45?Math.sin(t*80)*5:0)}px)`;
+  $('r'+i).style.borderColor=cr?'rgba(255,90,77,.8)':'';
+  let v;if(!cr){v='<span class="mu">pk </span><span style="color:#ffb347">'+PK[i]+'</span>';}else{const k=Math.floor(cl((t-5.4-i*.45)/.7)*40);v='<span class="bad">sk </span><span class="bad">'+SK[i].slice(0,k)+'</span><span class="mu">'+hx(40-k)+'</span>';}
+  $('v'+i).innerHTML=v;$('st'+i).innerHTML=cr?(t>6.1+i*.45?'<span class="bad">✗ KEY RECOVERED</span>':'<span class="bad">cracking…</span>'):'<span class="mu">'+CH[i][1]+'</span>';}
+ $('qd').style.transform=`translate(${Math.sin(t*93)*6}px,${Math.cos(t*71)*3}px) scale(${1+.04*Math.sin(t*20)})`;$('qd').style.textShadow=`${Math.sin(t*50)*8}px 0 #ff7a18`;
+ $('mk').style.transform=`rotate(${(t-12.6)*12}deg) scale(${.8+.2*e((t-12.6)/.8)})`;
+};window.__seek(0);
+</script>

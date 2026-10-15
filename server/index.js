@@ -6,7 +6,7 @@ const PORT = +process.env.PORT || 8256;
 const DATA = process.env.DATA_PATH || path.join(__dirname, '..', 'data.json');
 const CLIENT = path.join(__dirname, '..', 'client');
 const SLOT_MS = 4000, FAUCET_AMT = 1000, FAUCET_COOLDOWN = 3600e3, FEE = 0.001, KEEP_BLOCKS = 4000;
-const QPF_MINT = process.env.QPF_MINT || '';
+const QPF_MINT = process.env.QPF_MINT || 'JCsfUhtjjHpfMuRTDk2VXTStGU2z1Uz17aWHjkPdpump';
 
 const sha3 = (b) => crypto.createHash('sha3-256').update(b).digest('hex');
 const canon = (o) => JSON.stringify(o, Object.keys(o).sort());

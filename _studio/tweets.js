@@ -134,6 +134,79 @@ Change one tx and its SHA3-256 hash breaks. Every later block points at a parent
 No curves to break. No sigs to forge.
 
 $QPF`],
+  ["qpf-qday-15s.mp4", `Every public key you ever exposed is sitting on-chain, waiting.
+
+Q-day runs Shor's algorithm over the archive. BTC, ETH, SOL, NEAR: keys recovered.
+
+QuantumProof gives it nothing to crack.
+
+$QPF
+quantumproofchain.net`],
+  ["qpf-signing-21s.mp4", `One transfer on QuantumProof, start to finish:
+
+1,312-byte ML-DSA-44 key made in your browser
+2,420-byte signature, signed locally
+FIPS 204 verify before state
+4 validators finalize with ML-DSA-65
+
+$QPF
+quantumproofchain.net/wallet`],
+  ["qpf-lattice.png", `Why lattices?
+
+Elliptic curves hide a period. Shor finds periods in polynomial time.
+
+ML-DSA rests on Module-LWE: recover a short secret through noise. No period to find. Best known quantum attacks stay exponential.
+
+$QPF`],
+  ["qpf-anatomy.png", `Anatomy of a QuantumProof transaction:
+
+from: qpf1 + SHA3-256(pk)
+pk: ML-DSA-44, 1,312 bytes
+sig: 2,420 bytes, signed in your browser
+tx id: SHA3-256
+
+No secp256k1. No Ed25519. Nothing for Shor to grab.
+
+$QPF`],
+  ["qpf-timeline.png", `Q-day has a schedule.
+
+1994: Shor's algorithm
+2016: NIST post-quantum competition
+2024: FIPS 204 (ML-DSA) final
+2026: QuantumProof testnet, ML-DSA on every block
+2030s: CNSA 2.0 deadlines
+
+We started early.
+
+$QPF`],
+  ["qpf-levels.png", `Sized to NIST categories, not marketing:
+
+ML-DSA-44 (Cat 2): wallets + txs
+ML-DSA-65 (Cat 3, AES-192 class): blocks + votes
+SHA3-256: hashes + addresses
+
+Real parameters. Real bytes. Check any block.
+
+quantumproofchain.net/explorer`],
+  ['qpf-mcap.png', `$QPF at the market cap of:
+
+$ABEL peak: 48x
+$QTC peak: 82x
+$QRL peak: 450x
+$ZEC peak: 49,538x
+
+QuantumProof sits at $565K with a live testnet signing every block with ML-DSA.
+
+quantumproofchain.net`],
+  ['qpf-mcap2.png', `$QPF at the market cap of:
+
+$STRK: 1,017x
+$PRL: 1,176x
+$ZEC: 34,492x
+
+PRL is a post-quantum L1 doing $660M+ on SafeTrade. QuantumProof signs every block, vote and tx with ML-DSA. It sits at $565K.
+
+quantumproofchain.net`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });
