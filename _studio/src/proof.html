@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.win{position:absolute;left:190px;top:118px;width:900px;height:562px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,122,24,.4);box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(255,122,24,.15);background:#0b0806}
+.bar{height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#140e0a;border-bottom:1px solid rgba(255,122,24,.2)}.bar i{width:11px;height:11px;border-radius:50%;background:#3a2c22;display:block}
+.url{margin-left:14px;flex:1;height:24px;border-radius:7px;background:#050403;font-family:'JetBrains Mono';font-size:13px;display:flex;align-items:center;padding:0 12px;color:#a3968a}.url b{color:#f5efe8;font-weight:500}
+.vp{position:absolute;top:38px;left:0;right:0;bottom:0;overflow:hidden}.vp img{position:absolute;left:0;top:0;width:900px;transform-origin:0 0}
+.hl{position:absolute;border:2px solid #4dff9a;border-radius:8px;box-shadow:0 0 24px rgba(77,255,154,.5)}
+.cap{position:absolute;left:0;right:0;top:40px;text-align:center}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">No renders. No mockups.</div><div class="d" style="font-size:70px;line-height:1.05;margin-top:16px">Don't trust us.<br><span class="g">Check the chain.</span></div><div class="m mu" style="font-size:18px;margin-top:20px">Real captures from quantumproofchain.net · testnet live</div></div></div>
+<div id="st" style="position:absolute;inset:0"><div class="cap"><div class="k" id="kk"></div><div class="d" style="font-size:30px;margin-top:8px" id="tt"></div></div>
+<div class="win"><div class="bar"><i></i><i></i><i></i><div class="url">🔒&nbsp;<b>quantumproofchain.net</b><span id="path"></span></div></div>
+<div class="vp"><img id="im"><div class="hl" id="hl"></div></div></div></div>
+<div class="c" id="s9"><div><div class="d" style="font-size:58px;line-height:1.1">No promises.<br><span class="g">Try the tech yourself.</span></div>
+<div class="m" style="font-size:24px;margin-top:30px;line-height:1.9"><span class="mu">wallet</span> &nbsp;quantumproofchain.net/wallet<br><span class="mu">explorer</span> quantumproofchain.net/explorer</div><div class="m mu" style="font-size:18px;margin-top:22px">$QPF · JCsfUhtjjHpfMuRTDk2VXTStGU2z1Uz17aWHjkPdpump</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),es=(x)=>{x=cl(x);return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2},win=(t,a,b,f=.35)=>cl((t-a)/f)*cl((b-t)/f);
+const K=900/1280;// screenshot px -> window px
+// [start, kicker, title, img, path, [scroll from,to], highlight rect in screenshot px [x,y,w,h], zoom]
+const SC=[[2.6,'01 / WALLET','ML-DSA-44 keys, generated in the browser','02-wallet.png','/wallet',[0,0],[79,646,560,82],1],
+[7.6,'02 / SIGNED SEND','Transfer signed locally, verified by the network','02-wallet.png','/wallet',[0,90],[723,622,480,44],1.25],
+[11.6,'03 / THE BLOCK','4 ML-DSA-65 signatures, all verified','03-block.png','/explorer/block/96',[0,30],[290,590,330,24],1],
+[15.6,'04 / THE BYTES','3,309-byte proposer signature, in the open','03-block.png','/explorer/block/96',[30,55],[75,640,1130,105],1],
+[19.2,'05 / THE CHAIN','Every block, live, searchable','04-explorer.png','/explorer',[0,55],null,1],[22.6]];
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+window.__ready=Promise.all(['02-wallet.png','03-block.png','04-explorer.png'].map(f=>new Promise(r=>{const i=new Image();i.onload=r;i.src='../shots-live/'+f;})));
+window.__seek=(t)=>{x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1;for(const[px,py]of P){x.strokeStyle=`rgba(255,122,24,${.05+.03*Math.sin(t+px*.01)})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}
+ $('s0').style.opacity=win(t,0,2.6);$('st').style.opacity=win(t,2.6,22.6);$('s9').style.opacity=e((t-22.6)/.5);
+ let k=0;for(let i=0;i<5;i++)if(t>=SC[i][0])k=i;const s=SC[k],lt=t-s[0],dur=SC[k+1][0]-s[0];
+ $('kk').textContent=s[1];$('tt').textContent=s[2];$('kk').parentElement.style.opacity=e(lt/.3);
+ if(!$('im').src.endsWith(s[3]))$('im').src='../shots-live/'+s[3];$('path').textContent=s[4];
+ const p=es(lt/dur),sy=s[5][0]+(s[5][1]-s[5][0])*p,z=s[7],hl=s[6];
+ let ox=0,oy=sy*K;if(z>1&&hl){ox=(hl[0]*K)*(z-1)*p*.9;oy=sy*K*z;}
+ const zz=1+(z-1)*p;$('im').style.transform=`translate(${-ox}px,${-sy*K*zz}px) scale(${zz})`;
+ if(hl){$('hl').style.display='block';$('hl').style.left=(hl[0]*K*zz-ox-4)+'px';$('hl').style.top=((hl[1]-sy)*K*zz-4)+'px';$('hl').style.width=(hl[2]*K*zz+8)+'px';$('hl').style.height=(hl[3]*K*zz+8)+'px';$('hl').style.opacity=e((lt-.8)/.4);}else $('hl').style.display='none';
+ $('st').querySelector('.win').style.transform=`translateY(${(1-e((t-2.6)/.6))*40}px)`;
+};window.__seek(0);
+</script>

@@ -207,6 +207,21 @@ $ZEC: 34,492x
 PRL is a post-quantum L1 doing $660M+ on SafeTrade. QuantumProof signs every block, vote and tx with ML-DSA. It sits at $565K.
 
 quantumproofchain.net`],
+  ['qpf-vs-zec.png', `$ZEC hit a $28B market cap on elliptic-curve cryptography.
+
+Shor's algorithm breaks every ZEC key. QuantumProof signs every tx and block with ML-DSA, 4s blocks.
+
+$QPF at ZEC's ATH mcap: 49,538x
+
+quantumproofchain.net`],
+  ['qpf-proof-26s.mp4', `No false promises. Try the tech yourself.
+
+Make an ML-DSA wallet, claim testnet tQPF, send a signed transfer, then open the block and read all 4 quantum-safe signatures.
+
+quantumproofchain.net/wallet
+quantumproofchain.net/explorer
+
+$QPF`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });

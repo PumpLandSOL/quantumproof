@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuantumProof Validators</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<style>
+.hero{padding:70px 0 10px}.hero h1{font-size:clamp(40px,6vw,72px);letter-spacing:-.04em;line-height:1.02;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:760px;margin-top:18px}
+.econ{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}.econ .card{padding:22px}.econ .k{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}.econ .v{font-size:30px;font-weight:700;margin-top:8px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.steps .card{padding:24px}.steps b{display:block;font-size:18px;margin:10px 0 8px}.steps p{color:var(--mu);font-size:14px;line-height:1.6}
+pre.cmd{background:#0a0705;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono';font-size:13px;color:var(--or2);overflow-x:auto;margin-top:12px;line-height:1.7;position:relative}
+h2{font-size:30px;letter-spacing:-.02em;margin:60px 0 6px}.sub{color:var(--mu);font-size:15px}
+table.vt{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}.vt th{text-align:left;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line2)}
+.vt td{padding:13px 12px;border-bottom:1px solid var(--line)}.vt td.m{font-family:'JetBrains Mono';font-size:13px}.vt .num{text-align:right;font-family:'JetBrains Mono'}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}.tag{font-family:'JetBrains Mono';font-size:10px;padding:3px 7px;border-radius:99px;border:1px solid var(--line2);color:var(--or2);margin-left:8px}
+.empty{color:var(--mu);padding:26px 12px;font-size:15px}.tw{overflow-x:auto}
+@media(max-width:900px){.econ{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// validators · quantumproof-testnet-1</span>
+<h1>Run a node. <span class="g">Sign the chain.</span></h1>
+<p>The QuantumProof testnet validator set is open. Generate an ML-DSA-65 key on your own machine, stake testnet tQPF, and your node signs every block header with a 3,309-byte post-quantum signature. Signatures land in the block and anyone can verify them in the explorer.</p>
+<div class="econ" id="econ"></div></section>
+
+<h2>Join in three steps</h2><p class="sub">Requires Node.js 24 or newer (native ML-DSA). No other dependencies.</p>
+<div class="steps">
+<div class="card"><span class="kick">01</span><b>Download the node</b><p>One file, no install. Read it first: it's about 70 lines.</p><pre class="cmd">curl -O https://quantumproofchain.net/qpf-node.js</pre></div>
+<div class="card"><span class="kick">02</span><b>Start it with a name</b><p>Creates <code>qpf-validator.json</code> (your key, keep it secret), funds it from the faucet, stakes 500 tQPF and joins.</p><pre class="cmd">node qpf-node.js "Your Name"</pre></div>
+<div class="card"><span class="kick">03</span><b>Keep it online</b><p>Your node recomputes each header hash itself before signing it. Offline over 20s and you drop out of rotation. Leave any time and your stake comes back.</p><pre class="cmd">node qpf-node.js --exit</pre></div>
+</div>
+
+<h2>Community validators</h2><p class="sub">Validators run by the community, signing from their own machines.</p>
+<div class="card tw" style="margin-top:6px"><table class="vt"><thead><tr><th>Validator</th><th>Address</th><th class="num">Stake</th><th class="num">Proposed</th><th class="num">Attested</th><th class="num">Missed</th><th class="num">Rewards</th></tr></thead><tbody id="comm"></tbody></table></div>
+
+<h2>Genesis validators</h2><p class="sub">The four validators that have signed every block since genesis.</p>
+<div class="card tw" style="margin-top:6px"><table class="vt"><thead><tr><th>Validator</th><th>Address</th><th class="num">Proposed</th><th class="num">Attested</th><th class="num">Rewards</th></tr></thead><tbody id="core"></tbody></table></div>
+
+<h2>How rewards work</h2>
+<p class="sub" style="line-height:1.8;max-width:820px;margin-top:10px">Every 4-second slot, the proposer earns the <b style="color:var(--tx)">block reward</b> plus all transaction fees in the block. Every validator whose ML-DSA-65 attestation makes it into the block earns the <b style="color:var(--tx)">attestation reward</b>. Proposers rotate round-robin across every online validator. If a community proposer misses its slot, a genesis validator fills it and the miss is recorded publicly. Rewards are paid in testnet tQPF, which has no monetary value. Mainnet validator economics will be published with the mainnet spec.</p>
+</main>
+<script src="/common.js"></script><script>chrome('/validators');
+const sh = (a) => a.slice(0, 10) + '…' + a.slice(-6), n = (x) => (+x).toLocaleString(undefined, { maximumFractionDigits: 3 });
+async function load() { const d = await (await fetch('/api/validators')).json(), e = d.economics;
+  document.getElementById('econ').innerHTML = [['Stake', e.stake + ' tQPF'], ['Block reward', e.blockReward + ' tQPF + fees'], ['Attestation reward', e.attestReward + ' tQPF'], ['Community validators', d.community.length + ' · ' + d.community.filter((c) => c.online).length + ' online']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  const c = d.community.slice().sort((a, b) => b.online - a.online || b.rewards - a.rewards);
+  document.getElementById('comm').innerHTML = c.length ? c.map((v) => `<tr><td><span class="dot" style="background:${v.online ? 'var(--ok)' : 'var(--dim)'};box-shadow:${v.online ? '0 0 8px var(--ok)' : 'none'}"></span>${v.name.replace(/</g, '&lt;')}</td><td class="m">${sh(v.addr)}</td><td class="num">${n(v.stake)}</td><td class="num">${n(v.produced)}</td><td class="num">${n(v.attested)}</td><td class="num">${n(v.missed)}</td><td class="num" style="color:var(--or2)">${n(v.rewards)}</td></tr>`).join('') : '<tr><td colspan="7" class="empty">No community validators yet. Be the first: run the three commands above.</td></tr>';
+  document.getElementById('core').innerHTML = d.core.map((v) => `<tr><td><span class="dot" style="background:var(--ok);box-shadow:0 0 8px var(--ok)"></span>${v.name}<span class="tag">GENESIS</span></td><td class="m">${sh(v.addr)}</td><td class="num">${n(v.produced)}</td><td class="num">${n(v.attested)}</td><td class="num" style="color:var(--or2)">${n(v.rewards)}</td></tr>`).join(''); }
+load(); setInterval(load, 4000);
+</script></body></html>

@@ -25,12 +25,12 @@ article table{margin-top:16px}
 <tr><td>Hashes, addresses, tx root</td><td>SHA3-256</td><td>—</td><td>—</td><td>—</td></tr></tbody></table>
 <p>ML-DSA's security rests on the Module-LWE and Module-SIS lattice problems, for which no efficient quantum algorithm is known. Node signatures use the platform's native FIPS 204 implementation; browser wallets use the audited open-source <b>@noble/post-quantum</b> library. Both produce standard-encoded keys and signatures, so a wallet signature is verified natively by the node.</p>
 <h2 id="consensus">Consensus</h2>
-<p>Four validators (Kyber, Dilithium, Falcon, Sphincs) each hold an ML-DSA-65 key. Proposers rotate round-robin each 4-second slot.</p>
+<p>Four genesis validators (Kyber, Dilithium, Falcon, Sphincs) each hold an ML-DSA-65 key, and the set is open: anyone can stake 500 tQPF and run <b>qpf-node.js</b> to join (see <a href="/validators">Validators</a>). Proposers rotate round-robin across every online validator each 4-second slot. The pending header is published at <b>/api/pending</b>; nodes recompute its SHA3-256 hash and sign it with ML-DSA-65 within 2.6 s. A community proposer that misses its slot is skipped and a genesis validator fills it.</p>
 <pre>header = { height, prev, time, txRoot, proposer, txCount }
 hash   = SHA3-256(canonical(header))
 block  = header + ML-DSA-65 proposer sig + attestations
 final  ⇔ proposer sig valid AND ≥ 2 of 3 attestations valid</pre>
-<p>Every signature is verified before the block is appended; a block that fails is dropped and its transactions return to the mempool. Fees go to the block's proposer.</p>
+<p>Every signature is verified before the block is appended; a block that fails is dropped and its transactions return to the mempool. The proposer earns a 2 tQPF block reward plus all fees; each included attestation earns 0.25 tQPF.</p>
 <h2 id="tx">Transactions</h2>
 <pre>body = canonical({ amount, chain:"quantumproof-testnet-1", fee, from, nonce, to })
 sig  = ML-DSA-44.sign(sk, body)

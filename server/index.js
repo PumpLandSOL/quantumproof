@@ -52,34 +52,67 @@ function checkTx(t) {
 }
 const txHash = (t) => sha3(txBody(t) + t.sig);
 
-// ---------- block production: rotating ML-DSA-65 proposer + 3-of-4 attestations ----------
-function produce() {
-  const v = S.validators[S.height % S.validators.length];
+// ---------- block production: rotating ML-DSA-65 proposer + attestations ----------
+// Open validator set: anyone can register an ML-DSA-65 key (staking STAKE tQPF), run qpf-node.js and sign blocks
+// from their own machine. Each 4s slot the header is published at /api/pending; online community validators sign it
+// within SIGN_WINDOW_MS. A community proposer that fails to sign is skipped (missed++) and a core validator takes the slot.
+const STAKE = 500, BLOCK_REWARD = 2, ATT_REWARD = 0.25, SIGN_WINDOW_MS = 2600, ONLINE_MS = 20000, MAX_COMMUNITY = 64;
+S.community = S.community || [];
+const online = (c) => Date.now() - (c.lastSeen || 0) < ONLINE_MS;
+let pending = null;
+function simulate(txs) { // pick the txs that will apply, without mutating state
+  const tmp = {}, get = (k) => tmp[k] || (tmp[k] = { bal: (S.accounts[k] || {}).bal || 0, nonce: (S.accounts[k] || {}).nonce || 0 }), out = [];
+  for (const t of txs) { const a = get(t.from), b = get(t.to); if (a.bal < t.amount + t.fee - 1e-9 || t.nonce !== a.nonce) continue; a.bal -= t.amount + t.fee; a.nonce++; b.bal += t.amount; out.push(t); }
+  return out;
+}
+function makeHeader(prop, applied) {
   const prev = S.blocks.length ? S.blocks[S.blocks.length - 1].hash : '0'.repeat(64);
-  const txs = mempool.splice(0, 200); const applied = [];
-  for (const t of txs) {
-    const a = acct(t.from), b = acct(t.to);
-    if (a.bal < t.amount + t.fee - 1e-9 || t.nonce !== a.nonce) continue;
-    a.bal -= t.amount + t.fee; a.nonce++; a.pub = t.pub; a.txs++; b.bal += t.amount; b.txs++;
-    applied.push({ hash: txHash(t), from: t.from, to: t.to, amount: t.amount, fee: t.fee, nonce: t.nonce, kind: t.kind || 'transfer', sigBytes: 2420 });
+  const txRoot = sha3(applied.map((t) => txHash(t)).join('') || 'empty');
+  const header = { height: S.height + 1, prev, time: Date.now(), txRoot, proposer: prop.addr, txCount: applied.length };
+  return { header, hash: sha3(canon(header)) };
+}
+function startSlot() {
+  if (pending) return;
+  const set = S.validators.concat(S.community.filter(online));
+  const prop = set[S.height % set.length];
+  const txs = mempool.splice(0, 200), applied = simulate(txs);
+  const { header, hash } = makeHeader(prop, applied);
+  pending = { header, hash, prop, txs, applied, sigs: new Map(), core: S.validators.includes(prop) };
+  setTimeout(finalize, SIGN_WINDOW_MS);
+}
+function finalize() {
+  const P = pending; if (!P) return; pending = null;
+  let { prop, header, hash } = P, comm = [...P.sigs.values()];
+  const propSig = P.core ? null : P.sigs.get(prop.addr);
+  if (!P.core && !propSig) { // community proposer offline: skip it, a core validator takes the slot
+    prop.missed = (prop.missed || 0) + 1; prop = S.validators[S.height % S.validators.length];
+    ({ header, hash } = makeHeader(prop, P.applied)); comm = [];
   }
-  const fees = applied.reduce((s, t) => s + t.fee, 0); acct(v.addr).bal += fees;
-  const txRoot = sha3(applied.map((t) => t.hash).join('') || 'empty');
-  const header = { height: S.height + 1, prev, time: Date.now(), txRoot, proposer: v.addr, txCount: applied.length };
-  const hash = sha3(canon(header));
   const sign = (val) => crypto.sign(null, Buffer.from(hash), skOf(val)).toString('hex');
-  const atts = S.validators.filter((x) => x !== v).map((x) => ({ validator: x.addr, name: x.name, sig: sign(x) }));
-  const block = { ...header, hash, proposerName: v.name, sig: sign(v), attestations: atts, alg: 'ML-DSA-65', hashAlg: 'SHA3-256', fees, txList: applied };
-  // self-check: every signature must verify against the validator's public key before the block is accepted
-  const ok = verify(hash, v.pub, block.sig, 'ML-DSA-65') && atts.filter((a) => verify(hash, S.validators.find((x) => x.addr === a.validator).pub, a.sig, 'ML-DSA-65')).length >= 2;
-  if (!ok) { mempool = txs.concat(mempool); return; }
+  const pSig = S.validators.includes(prop) ? sign(prop) : propSig.sig;
+  const atts = S.validators.filter((x) => x !== prop).map((x) => ({ validator: x.addr, name: x.name, sig: sign(x) }))
+    .concat(comm.filter((c) => c.addr !== prop.addr).map((c) => ({ validator: c.addr, name: c.name, sig: c.sig, community: true })));
+  const valOf = (addr) => S.validators.find((x) => x.addr === addr) || S.community.find((x) => x.addr === addr);
+  const ok = verify(hash, prop.pub, pSig, 'ML-DSA-65') && atts.filter((x) => verify(hash, valOf(x.validator).pub, x.sig, 'ML-DSA-65')).length >= 2;
+  if (!ok) { mempool = P.txs.concat(mempool); return; }
+  const applied = [];
+  for (const t of P.applied) { const a = acct(t.from), b = acct(t.to); if (a.bal < t.amount + t.fee - 1e-9 || t.nonce !== a.nonce) continue;
+    a.bal -= t.amount + t.fee; a.nonce++; a.pub = t.pub; a.txs++; b.bal += t.amount; b.txs++;
+    applied.push({ hash: txHash(t), from: t.from, to: t.to, amount: t.amount, fee: t.fee, nonce: t.nonce, kind: t.kind || 'transfer', sigBytes: 2420 }); }
+  const fees = applied.reduce((x, t) => x + t.fee, 0);
+  acct(prop.addr).bal += fees + BLOCK_REWARD; prop.rewards = (prop.rewards || 0) + fees + BLOCK_REWARD;
+  for (const x of atts) { acct(x.validator).bal += ATT_REWARD; const v = valOf(x.validator); v.rewards = (v.rewards || 0) + ATT_REWARD; v.attested = (v.attested || 0) + 1; }
+  const block = { ...header, hash, proposerName: prop.name, sig: pSig, attestations: atts, alg: 'ML-DSA-65', hashAlg: 'SHA3-256', fees, reward: BLOCK_REWARD, txList: applied };
   S.sigsVerified += 1 + atts.length;
   for (const t of applied) S.txIndex[t.hash] = block.height;
-  S.height = block.height; S.totalTx += applied.length; v.produced++;
+  S.height = block.height; S.totalTx += applied.length; prop.produced = (prop.produced || 0) + 1;
   S.blocks.push(block); if (S.blocks.length > KEEP_BLOCKS) S.blocks.splice(0, S.blocks.length - KEEP_BLOCKS);
   dirty = true; broadcast(block);
 }
-setInterval(produce, SLOT_MS);
+setInterval(startSlot, SLOT_MS);
+const regBody = (o) => canon({ chain: CHAIN_ID, kind: o.kind, name: o.name || '', pub: o.pub });
+const pubVal = (c) => ({ name: c.name, addr: c.addr, stake: c.stake, produced: c.produced || 0, attested: c.attested || 0, missed: c.missed || 0, rewards: +(c.rewards || 0).toFixed(3), joined: c.joined, online: online(c), lastSeen: c.lastSeen || 0 });
+const coreVal = (v) => ({ name: v.name, addr: v.addr, produced: v.produced, attested: v.attested || 0, rewards: +(v.rewards || 0).toFixed(3), pubBytes: v.pub.length / 2 });
 
 // ---------- live feed (SSE) ----------
 const subs = new Set();
@@ -93,7 +126,7 @@ const body = (req) => new Promise((ok) => { let d = ''; req.on('data', (c) => { 
 function stats() {
   const last = S.blocks.slice(-30); const span = last.length > 1 ? (last[last.length - 1].time - last[0].time) / 1000 : 1;
   return { chain: CHAIN_ID, height: S.height, totalTx: S.totalTx, accounts: Object.keys(S.accounts).length, sigsVerified: S.sigsVerified, mempool: mempool.length,
-    tps: +(last.reduce((s, b) => s + b.txCount, 0) / span).toFixed(2), slotMs: SLOT_MS, validators: S.validators.map((v) => ({ name: v.name, addr: v.addr, produced: v.produced, pubBytes: v.pub.length / 2 })),
+    tps: +(last.reduce((s, b) => s + b.txCount, 0) / span).toFixed(2), slotMs: SLOT_MS, validators: S.validators.map(coreVal), community: S.community.map(pubVal), economics: { stake: STAKE, blockReward: BLOCK_REWARD, attestReward: ATT_REWARD, fee: FEE, signWindowMs: SIGN_WINDOW_MS },
     alg: { blocks: 'ML-DSA-65', tx: 'ML-DSA-44', hash: 'SHA3-256' }, sizes: { ed25519Sig: 64, mldsa44Sig: 2420, mldsa65Sig: 3309, mldsa44Pub: 1312 }, mint: QPF_MINT };
 }
 http.createServer(async (req, res) => {
@@ -113,9 +146,28 @@ http.createServer(async (req, res) => {
       S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT }); }
     if (p === '/api/tx' && req.method === 'POST') { const t = await body(req); t.fee = FEE; const err = checkTx(t); if (err) return send(res, 400, { error: err });
       mempool.push(t); return send(res, 200, { ok: true, hash: txHash(t), verified: 'ML-DSA-44' }); }
+    if (p === '/api/pending') return send(res, 200, pending ? { chain: CHAIN_ID, height: pending.header.height, hash: pending.hash, proposer: pending.prop.addr, proposerName: pending.prop.name, header: pending.header } : { height: null });
+    if (p === '/api/validators') return send(res, 200, { core: S.validators.map(coreVal), community: S.community.map(pubVal), economics: { stake: STAKE, blockReward: BLOCK_REWARD, attestReward: ATT_REWARD, fee: FEE } });
+    if (p === '/api/attest' && req.method === 'POST') { const { addr, hash, sig } = await body(req); const c = S.community.find((x) => x.addr === addr);
+      if (!c) return send(res, 404, { error: 'unknown validator' }); if (!pending || pending.hash !== hash) return send(res, 409, { error: 'slot closed' });
+      if (!/^[0-9a-f]{6618}$/.test(sig || '') || !verify(hash, c.pub, sig, 'ML-DSA-65')) return send(res, 400, { error: 'invalid ML-DSA-65 signature' });
+      c.lastSeen = Date.now(); pending.sigs.set(addr, { addr, name: c.name, sig }); S.sigsVerified++; return send(res, 200, { ok: true, height: pending.header.height, proposer: pending.prop.addr === addr }); }
+    if (p === '/api/validator/register' && req.method === 'POST') { const o = await body(req); o.kind = 'register-validator';
+      if (!/^[0-9a-f]{3904}$/.test(o.pub || '')) return send(res, 400, { error: 'pub must be an ML-DSA-65 key (1952 bytes)' });
+      if (!/^[A-Za-z0-9 ._-]{2,24}$/.test(o.name || '')) return send(res, 400, { error: 'name: 2-24 letters, digits, space . _ -' });
+      if (!verify(regBody(o), o.pub, o.sig || '', 'ML-DSA-65')) return send(res, 400, { error: 'invalid ML-DSA-65 signature' });
+      const addr = addrOf(o.pub); if (S.community.find((x) => x.addr === addr)) return send(res, 200, { ok: true, addr, already: true });
+      if (S.community.length >= MAX_COMMUNITY) return send(res, 403, { error: 'validator set full' });
+      if (S.validators.concat(S.community).some((x) => x.name.toLowerCase() === o.name.toLowerCase())) return send(res, 400, { error: 'name taken' });
+      const ac = acct(addr); if (ac.bal < STAKE) return send(res, 400, { error: 'need ' + STAKE + ' tQPF at ' + addr + ' to stake (balance ' + ac.bal + ')' });
+      ac.bal -= STAKE; S.community.push({ name: o.name, pub: o.pub, addr, stake: STAKE, joined: Date.now(), lastSeen: Date.now(), produced: 0, attested: 0, missed: 0, rewards: 0 }); dirty = true;
+      return send(res, 200, { ok: true, addr, stake: STAKE }); }
+    if (p === '/api/validator/exit' && req.method === 'POST') { const o = await body(req); o.kind = 'exit-validator'; const i = S.community.findIndex((x) => x.pub === o.pub);
+      if (i < 0) return send(res, 404, { error: 'unknown validator' }); if (!verify(regBody(o), o.pub, o.sig || '', 'ML-DSA-65')) return send(res, 400, { error: 'invalid ML-DSA-65 signature' });
+      const c = S.community[i]; acct(c.addr).bal += c.stake; S.community.splice(i, 1); dirty = true; return send(res, 200, { ok: true, returned: c.stake }); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }
