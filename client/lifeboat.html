@@ -1,0 +1,83 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Lifeboat · QuantumProof</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<meta property="og:title" content="The Lifeboat: get your Solana wallet off Ed25519"><meta property="og:description" content="Bind your exposed Solana wallet to a post-quantum QuantumProof address with two signatures. Your $QPF sets your tier.">
+<style>
+.hero{padding:64px 0 6px;text-align:center}.hero h1{font-size:clamp(42px,6.6vw,84px);letter-spacing:-.045em;line-height:.98;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:760px;margin:18px auto 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}.kpis .card{padding:18px 20px}.kpis .k,.lbl{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}.kpis .v{font-size:28px;font-weight:700;margin-top:6px}
+.lay{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;margin-top:22px;align-items:start}
+.steps{display:grid;gap:12px}.st{padding:22px 24px;display:grid;grid-template-columns:46px 1fr;gap:16px;align-items:start;transition:.3s}.st.off{opacity:.42}.st.done{border-color:rgba(77,255,154,.45)}
+.num{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-family:'JetBrains Mono';font-weight:700;border:1px solid var(--line2);color:var(--or2)}.st.done .num{border-color:var(--ok);color:var(--ok)}
+.st h3{font-size:20px;letter-spacing:-.02em}.st p{color:var(--mu);font-size:14.5px;line-height:1.6;margin-top:6px}.st .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.val{font-family:'JetBrains Mono';font-size:12.5px;word-break:break-all;margin-top:12px;color:var(--tx);background:#0a0705;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.bad{color:#ff5a4d}.okc{color:var(--ok)}
+.ticket{margin-top:6px;padding:0;overflow:hidden;border-color:rgba(77,255,154,.5);box-shadow:0 0 90px rgba(77,255,154,.1)}.ticket .tp{padding:26px 28px;background:linear-gradient(120deg,rgba(255,122,24,.14),rgba(77,255,154,.06))}.ticket .tb{padding:20px 28px;border-top:2px dashed var(--line2);display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ticket .big{font-size:46px;font-weight:700;letter-spacing:-.04em;line-height:1}.ticket .tb .v{font-size:18px;font-weight:600;margin-top:4px;font-family:'JetBrains Mono'}
+.tiers{padding:20px 22px}.tr{display:grid;grid-template-columns:1fr 1fr 1fr 60px;gap:8px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;font-family:'JetBrains Mono'}.tr:last-child{border:0}.tr.me{color:var(--or2)}
+.man{padding:6px 22px 10px;margin-top:12px}.mr{display:grid;grid-template-columns:54px 1fr 92px;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px;font-family:'JetBrains Mono';align-items:center}.mr:last-child{border:0}
+.tg{font-size:11px;padding:3px 8px;border-radius:99px;border:1px solid var(--line2);text-align:center;color:var(--or2)}
+.arrow{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono';font-size:13px;margin-top:12px}.arrow .a{flex:1;padding:10px 12px;border-radius:10px;border:1px solid}.arrow .x{border-color:rgba(255,90,77,.5);color:#ff8a80}.arrow .y{border-color:rgba(77,255,154,.5);color:var(--ok)}
+@media(max-width:980px){.lay{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.ticket .tb{grid-template-columns:1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// the lifeboat · solana → quantumproof</span>
+<h1>Your Solana wallet is<br><span class="g">already exposed.</span> Board.</h1>
+<p>Every Solana address is an Ed25519 public key, the exact thing Shor's algorithm reverses. The Lifeboat binds your Solana wallet to a post-quantum QuantumProof address with two signatures over one message. Your real $QPF balance sets your tier.</p></section>
+<div class="kpis" id="kp"></div>
+<div class="lay">
+<div class="steps">
+ <div class="card st" id="s1"><div class="num">01</div><div><h3>Connect your Solana wallet</h3><p>We read your address and your live $QPF balance on Solana mainnet. Nothing is moved, nothing is approved.</p>
+  <div class="row"><button class="btn pri" id="cx">Connect Phantom</button><span class="m dim" id="cxs"></span></div><div id="o1"></div></div></div>
+ <div class="card st off" id="s2"><div class="num">02</div><div><h3>Your post-quantum key</h3><p>An ML-DSA-44 keypair (NIST FIPS 204), generated in this browser. If you already have a QuantumProof wallet here, we use it.</p>
+  <div class="row"><button class="btn" id="kg">Use my QuantumProof key</button></div><div id="o2"></div></div></div>
+ <div class="card st off" id="s3"><div class="num">03</div><div><h3>Sign twice, board once</h3><p>Phantom signs the boarding message with Ed25519. Your browser signs the same message with ML-DSA-44. The server verifies both and writes the binding into the next block.</p>
+  <div class="row"><button class="btn pri" id="go" disabled>Sign &amp; board</button></div><div id="o3"></div></div></div>
+ <div id="tk"></div>
+</div>
+<div>
+ <div class="card tiers"><div class="lbl" style="padding-bottom:8px">Tiers · set by $QPF held on Solana</div><div id="tiers"></div></div>
+ <div class="card man"><div class="lbl" style="padding:12px 0 6px">Passenger manifest · live</div><div id="man"></div></div>
+</div></div>
+</main>
+<script src="/common.js"></script><script type="module">
+import { ml_dsa44 } from 'https://cdn.jsdelivr.net/npm/@noble/post-quantum@0.2.1/ml-dsa.js/+esm';
+import { sha3_256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.5.0/sha3.js/+esm';
+chrome('/lifeboat');
+const $ = (i) => document.getElementById(i), hex = (u) => [...u].map((b) => b.toString(16).padStart(2, '0')).join(''), unhex = (h) => new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16)));
+const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+const n = (x, d = 0) => (+x).toLocaleString(undefined, { maximumFractionDigits: d });
+let SOL = null, Q = null, W = null, ST = null;
+const prov = () => window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null) || window.solana;
+function wal() { try { const s = localStorage.getItem('qpf_seed'); if (!s) return null; const k = ml_dsa44.keygen(unhex(s)); const pub = hex(k.publicKey); return { sk: k.secretKey, pub, addr: 'qpf1' + hex(sha3_256(unhex(pub))).slice(0, 40) }; } catch { return null; } }
+function step(i, s) { const e = $('s' + i); e.classList.toggle('off', s === 'off'); e.classList.toggle('done', s === 'done'); }
+async function load() { ST = await (await fetch('/api/lifeboat')).json();
+  $('kp').innerHTML = [['Seats taken', n(ST.seats)], ['$QPF aboard', n(ST.qpfMigrated)], ['Admirals', n(ST.tiers[0].count)], ['Signature schemes', 'Ed25519 → ML-DSA']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  $('tiers').innerHTML = `<div class="tr dim"><span>TIER</span><span>HOLD $QPF</span><span>GRANT</span><span>PTS</span></div>` + ST.tiers.map((t) => `<div class="tr ${Q && Q.tier === t.name ? 'me' : ''}"><span>${t.name}</span><span>${t.min ? '≥ ' + n(t.min) : 'any'}</span><span>${n(t.grant)} tQPF</span><span>+${t.pts}</span></div>`).join('');
+  $('man').innerHTML = ST.manifest.length ? ST.manifest.map((b) => `<div class="mr"><span class="dim">#${b.seat}</span><span>${esc(b.sol.slice(0, 5) + '…' + b.sol.slice(-4))} <span class="dim">→</span> <a href="/explorer/account/${b.qpf}" class="okc">${short(b.qpf, 8, 4)}</a><br><span class="dim">${ago(b.at)}</span></span><span class="tg">${b.tier}</span></div>`).join('') : '<div class="mr"><span></span><span class="dim">No one has boarded yet. Take seat #1.</span><span></span></div>'; }
+$('cx').onclick = async () => { const p = prov(); if (!p) { $('cxs').innerHTML = 'No Solana wallet found. <a class="okc" href="https://phantom.app" target="_blank">Get Phantom →</a>'; return; }
+  try { const r = await p.connect(); SOL = r.publicKey.toString(); } catch (e) { $('cxs').textContent = 'Connection rejected.'; return; }
+  $('cxs').textContent = 'reading Solana mainnet…';
+  Q = await (await fetch('/api/lifeboat/quote?sol=' + SOL)).json(); if (Q.error) { $('cxs').textContent = Q.error; return; }
+  $('cxs').textContent = ''; $('cx').textContent = 'Connected';
+  $('o1').innerHTML = `<div class="val">${esc(SOL)}</div><div class="arrow"><div class="a x">Ed25519 · public key on-chain · <b>EXPOSED</b></div></div>
+   <p style="margin-top:10px">Holding <b style="color:var(--tx)">${n(Q.held, 2)} $QPF</b> → tier <b class="okc">${Q.tier}</b>: ${n(Q.grant)} tQPF grant, +${Q.pts} Season 0 points.</p>`;
+  step(1, 'done'); if (Q.seat) return ticket(Q.seat); step(2, ''); load(); };
+$('kg').onclick = () => { W = wal(); if (!W) { const s = hex(crypto.getRandomValues(new Uint8Array(32))); try { localStorage.setItem('qpf_seed', s); } catch {} W = wal() || (() => { const k = ml_dsa44.keygen(unhex(s)); const pub = hex(k.publicKey); return { sk: k.secretKey, pub, addr: 'qpf1' + hex(sha3_256(unhex(pub))).slice(0, 40) }; })(); }
+  $('o2').innerHTML = `<div class="val">${W.addr}</div><div class="arrow"><div class="a y">ML-DSA-44 · 1,312-byte lattice key · <b>QUANTUM-SAFE</b></div></div><p style="margin-top:10px">Back up its seed in the <a class="okc" href="/wallet">Wallet</a>.</p>`;
+  $('kg').textContent = 'Key ready'; step(2, 'done'); step(3, ''); $('go').disabled = false; };
+$('go').onclick = async () => { $('go').disabled = true; const m = (await (await fetch(`/api/lifeboat/msg?sol=${SOL}&qpf=${W.addr}`)).json()).message, bytes = new TextEncoder().encode(m);
+  $('o3').innerHTML = `<div class="val" style="white-space:pre-wrap">${esc(m)}</div><p class="m" id="lg" style="margin-top:10px">waiting for Phantom (Ed25519)…</p>`;
+  let solSig; try { const r = await prov().signMessage(bytes, 'utf8'); solSig = hex(r.signature || r); } catch { $('lg').innerHTML = '<span class="bad">Signature rejected in Phantom.</span>'; $('go').disabled = false; return; }
+  $('lg').textContent = 'Ed25519 ✓ 64 bytes · signing ML-DSA-44…'; await new Promise((r) => setTimeout(r, 30));
+  const sig = hex(ml_dsa44.sign(W.sk, bytes)); $('lg').textContent = 'ML-DSA-44 ✓ 2,420 bytes · verifying both on-chain…';
+  const r = await (await fetch('/api/lifeboat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sol: SOL, qpf: W.addr, solSig, pub: W.pub, sig }) })).json();
+  if (r.error) { $('lg').innerHTML = `<span class="bad">${esc(r.error)}</span>`; $('go').disabled = false; return; }
+  $('lg').innerHTML = '<span class="okc">Both signatures verified. Boarding written to the next block.</span>'; step(3, 'done'); ticket(r); load(); };
+function ticket(b) { const tw = `I just boarded the Lifeboat.\n\nSeat #${b.seat} · ${b.tier}. My Solana wallet is bound to a post-quantum ML-DSA address on QuantumProof.\n\nYour Ed25519 key is exposed. Board: quantumproofchain.net/lifeboat\n\n$QPF`;
+  $('tk').innerHTML = `<div class="card ticket"><div class="tp"><span class="kick">boarding pass · quantumproof-testnet-1</span><div style="display:flex;justify-content:space-between;align-items:end;margin-top:12px;flex-wrap:wrap;gap:12px"><div class="big">Seat #${b.seat}</div><div class="big g">${b.tier}</div></div></div>
+   <div class="tb"><div><div class="lbl">From · Ed25519</div><div class="v bad">${esc(b.sol.slice(0, 6) + '…' + b.sol.slice(-6))}</div></div><div><div class="lbl">To · ML-DSA-44</div><div class="v okc">${short(b.qpf, 10, 6)}</div></div>
+   <div><div class="lbl">$QPF held</div><div class="v">${n(b.held, 2)}</div></div><div><div class="lbl">Grant · points</div><div class="v">${n(b.grant)} tQPF · +${b.pts}</div></div>
+   <div style="grid-column:1/-1"><div class="lbl">Binding hash · SHA3-256</div><div class="v" style="font-size:12px;word-break:break-all;color:var(--mu)">${b.hash}</div></div>
+   <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><a class="btn pri" target="_blank" href="https://x.com/intent/tweet?text=${encodeURIComponent(tw)}">Share my seat</a><a class="btn" href="/explorer/account/${b.qpf}">View on explorer</a><a class="btn" href="/dex">Trade the grant →</a></div></div></div>`;
+  $('tk').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+load(); setInterval(load, 8000);
+</script></body></html>

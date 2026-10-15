@@ -222,6 +222,43 @@ function dexOp(o) {
 const dexState = () => { const P = S.pool, day = P.hist.filter((h) => Date.now() - h[0] < 864e5); return { pair: 'tQPF/tUSD', pool: POOL_ADDR, reserves: { tQPF: P.q, tUSD: P.u }, price: price(), tvl: P.u * 2, lpShares: P.total, feeBps: DEX_FEE_BPS,
   volume24h: P.vol.reduce((x, v) => x + v[1], 0), change24h: day.length ? price() / day[0][1] - 1 : 0, swaps: P.swaps.slice(0, 25), hist: P.hist.slice(-300) }; };
 
+// ---------- the Lifeboat: Solana → QuantumProof migration registry ----------
+// A Solana wallet is an Ed25519 public key, exposed from birth. Boarding binds it to a post-quantum qpf1 address:
+// the SAME message is signed by the Solana key (Ed25519, via Phantom) and the QuantumProof key (ML-DSA-44). Both are
+// verified here, the binding is written into the next block, and the wallet's real $QPF balance (Solana mainnet)
+// sets its tier and boarding grant.
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58dec(s) { let n = 0n; for (const c of s) { const i = B58.indexOf(c); if (i < 0) throw new Error('bad base58'); n = n * 58n + BigInt(i); }
+  let h = n.toString(16); if (h.length % 2) h = '0' + h; const lead = s.match(/^1*/)[0].length; return Buffer.concat([Buffer.alloc(lead), n ? Buffer.from(h, 'hex') : Buffer.alloc(0)]); }
+const edVerify = (msg, solAddr, sigHex) => { try { const raw = b58dec(solAddr); if (raw.length !== 32) return false;
+  const key = crypto.createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), raw]), format: 'der', type: 'spki' });
+  return crypto.verify(null, Buffer.from(msg), key, Buffer.from(sigHex, 'hex')); } catch { return false; } };
+const boardMsg = (sol, qpf) => 'QuantumProof Lifeboat v1\nI am moving off Ed25519.\nSolana: ' + sol + '\nQuantumProof: ' + qpf + '\nchain: ' + CHAIN_ID;
+const TIERS = [['Admiral', 10e6, 25000, 500], ['Captain', 1e6, 10000, 250], ['Crew', 1e5, 5000, 100], ['Passenger', 0, 1000, 25]];
+const tierOf = (q) => TIERS.find((t) => q >= t[1]);
+S.boats = S.boats || [];
+async function qpfHeld(sol) { const r = await rpc('https://api.mainnet-beta.solana.com', 'getTokenAccountsByOwner', [sol, { mint: QPF_MINT }, { encoding: 'jsonParsed' }]);
+  if (!r) throw new Error('Solana RPC unavailable, try again'); return (r.value || []).reduce((s, a) => s + (+a.account.data.parsed.info.tokenAmount.uiAmount || 0), 0); }
+async function boardBoat(o) {
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(o.sol || '')) return 'bad Solana address';
+  if (!/^qpf1[0-9a-f]{40}$/.test(o.qpf || '')) return 'bad qpf1 address';
+  if (S.boats.some((b) => b.sol === o.sol)) return 'this Solana wallet already boarded';
+  if (S.boats.some((b) => b.qpf === o.qpf)) return 'this QuantumProof address already holds a seat';
+  const msg = boardMsg(o.sol, o.qpf);
+  if (!/^[0-9a-f]{128}$/.test(o.solSig || '') || !edVerify(msg, o.sol, o.solSig)) return 'invalid Ed25519 signature from the Solana wallet';
+  if (!/^[0-9a-f]{2624}$/.test(o.pub || '') || addrOf(o.pub) !== o.qpf) return 'pubkey must be the ML-DSA-44 key for the qpf1 address';
+  if (!/^[0-9a-f]{4840}$/.test(o.sig || '') || !verify(msg, o.pub, o.sig, 'ML-DSA-44')) return 'invalid ML-DSA-44 signature';
+  S.sigsVerified += 2;
+  const held = await qpfHeld(o.sol), [tier, , grant, pts] = tierOf(held);
+  const hash = sha3(msg + o.solSig + o.sig), seat = S.boats.length + 1;
+  const b = { seat, sol: o.sol, qpf: o.qpf, held, tier, grant, pts, hash, at: Date.now() };
+  S.boats.push(b); acct(o.qpf).bal += grant; acct(o.qpf).pub = acct(o.qpf).pub || o.pub; const pp = ptOf(o.qpf); pp.bonus += pts; pp.notes.push({ points: pts, note: 'Lifeboat seat #' + seat + ' (' + tier + ')', at: Date.now() });
+  dexPending.push({ hash, from: o.qpf, to: 'qpf1' + '0'.repeat(32) + '1feb0a7e', amount: grant, fee: 0, nonce: seat, kind: 'lifeboat-board', detail: 'Ed25519 ' + o.sol.slice(0, 6) + '…' + o.sol.slice(-4) + ' → ML-DSA ' + tier, sigBytes: 64 + 2420 });
+  dirty = true; return { ok: true, ...b };
+}
+const boatState = () => { const by = {}; for (const t of TIERS) by[t[0]] = 0; let held = 0; for (const b of S.boats) { by[b.tier]++; held += b.held; }
+  return { seats: S.boats.length, qpfMigrated: held, tiers: TIERS.map(([name, min, grant, pts]) => ({ name, min, grant, pts, count: by[name] })), manifest: S.boats.slice(-50).reverse(), mint: QPF_MINT }; };
+
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
@@ -285,9 +322,15 @@ http.createServer(async (req, res) => {
     if (p === '/api/dex' && req.method === 'GET') return send(res, 200, dexState());
     if (p.startsWith('/api/dex/account/')) { const a = p.slice(17), ac = S.accounts[a] || {}; return send(res, 200, { address: a, tQPF: ac.bal || 0, tUSD: ac.usd || 0, dnonce: ac.dn || 0, lpShares: S.pool.shares[a] || 0, lpTotal: S.pool.total }); }
     if (p === '/api/dex' && req.method === 'POST') { const r = dexOp(await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); }
+    if (p === '/api/lifeboat' && req.method === 'GET') return send(res, 200, boatState());
+    if (p === '/api/lifeboat/quote') { const sol = u.searchParams.get('sol') || ''; if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(sol)) return send(res, 400, { error: 'bad Solana address' });
+      try { const held = await qpfHeld(sol), t = tierOf(held), seat = S.boats.find((b) => b.sol === sol); return send(res, 200, { sol, held, tier: t[0], grant: t[2], pts: t[3], seat: seat || null }); } catch (e) { return send(res, 502, { error: String(e.message || e) }); } }
+    if (p === '/api/lifeboat/msg') return send(res, 200, { message: boardMsg(u.searchParams.get('sol') || '', u.searchParams.get('qpf') || '') });
+    if (p.startsWith('/api/lifeboat/seat/')) { const k = decodeURIComponent(p.slice(19)); const b = S.boats.find((x) => x.sol === k || x.qpf === k); return b ? send(res, 200, b) : send(res, 404, { error: 'no seat' }); }
+    if (p === '/api/lifeboat' && req.method === 'POST') { try { const r = await boardBoat(await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); } catch (e) { return send(res, 502, { error: String(e.message || e) }); } }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

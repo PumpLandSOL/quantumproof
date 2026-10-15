@@ -304,6 +304,13 @@ The first DEX where every swap is signed with ML-DSA in your browser and verifie
 quantumproofchain.net/dex
 
 $QPF`],
+  ['qpf-lifeboat-26s.mp4', `The Lifeboat is live.
+
+Every Solana wallet is an Ed25519 public key. Q-day reverses it.
+
+Sign once in Phantom, once with ML-DSA, and your wallet is bound to a post-quantum address. Your $QPF sets your tier.
+
+quantumproofchain.net/lifeboat`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });

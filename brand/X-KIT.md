@@ -452,3 +452,14 @@ quantumproofchain.net/dex
 
 $QPF
 ```
+
+## 37. qpf-lifeboat-26s.mp4
+```
+The Lifeboat is live.
+
+Every Solana wallet is an Ed25519 public key. Q-day reverses it.
+
+Sign once in Phantom, once with ML-DSA, and your wallet is bound to a post-quantum address. Your $QPF sets your tier.
+
+quantumproofchain.net/lifeboat
+```
