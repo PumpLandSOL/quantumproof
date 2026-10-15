@@ -98,7 +98,7 @@ function finalize() {
   const applied = [];
   for (const t of P.applied) { const a = acct(t.from), b = acct(t.to); if (a.bal < t.amount + t.fee - 1e-9 || t.nonce !== a.nonce) continue;
     a.bal -= t.amount + t.fee; a.nonce++; a.pub = t.pub; a.txs++; b.bal += t.amount; b.txs++;
-    applied.push({ hash: txHash(t), from: t.from, to: t.to, amount: t.amount, fee: t.fee, nonce: t.nonce, kind: t.kind || 'transfer', sigBytes: 2420 }); }
+    applied.push({ hash: txHash(t), from: t.from, to: t.to, amount: t.amount, fee: t.fee, nonce: t.nonce, kind: t.kind || 'transfer', sigBytes: 2420 }); if (t.to !== t.from) ptTx(t.from); }
   const fees = applied.reduce((x, t) => x + t.fee, 0);
   acct(prop.addr).bal += fees + BLOCK_REWARD; prop.rewards = (prop.rewards || 0) + fees + BLOCK_REWARD;
   for (const x of atts) { acct(x.validator).bal += ATT_REWARD; const v = valOf(x.validator); v.rewards = (v.rewards || 0) + ATT_REWARD; v.attested = (v.attested || 0) + 1; }
@@ -118,6 +118,19 @@ const coreVal = (v) => ({ name: v.name, addr: v.addr, produced: v.produced, atte
 const subs = new Set();
 function broadcast(b) { const m = 'data: ' + JSON.stringify(slim(b)) + '\n\n'; for (const r of subs) r.write(m); }
 const slim = (b) => ({ height: b.height, hash: b.hash, time: b.time, proposerName: b.proposerName, txCount: b.txCount, sigs: 1 + b.attestations.length });
+
+// ---------- testnet points: Season 0 ----------
+// users: PT_TX per applied transfer sent (max TX_CAP/day), PT_FAUCET per faucet claim; validators: attestations + proposals - misses;
+// bonus: admin grants for confirmed bug reports (ADMIN_KEY env). Points are a public record of testnet participation.
+const PT_TX = 2, TX_CAP = 25, PT_FAUCET = 5, PT_ATT = 1, PT_PROP = 4, PT_MISS = 4, ADMIN_KEY = process.env.ADMIN_KEY || '';
+S.pts = S.pts || {};
+const ptOf = (a) => S.pts[a] || (S.pts[a] = { tx: 0, faucet: 0, bonus: 0, day: '', today: 0, notes: [] });
+const today = () => new Date().toISOString().slice(0, 10);
+function ptTx(addr) { const p = ptOf(addr), d = today(); if (p.day !== d) { p.day = d; p.today = 0; } if (p.today >= TX_CAP) return; p.today++; p.tx++; }
+function pointsOf(addr) { const p = S.pts[addr] || { tx: 0, faucet: 0, bonus: 0 }, v = S.community.find((x) => x.addr === addr);
+  const val = v ? Math.max(0, (v.attested || 0) * PT_ATT + (v.produced || 0) * PT_PROP - (v.missed || 0) * PT_MISS) : 0;
+  return { addr, name: v ? v.name : null, validator: !!v, txPts: p.tx * PT_TX, faucetPts: p.faucet * PT_FAUCET, validatorPts: val, bonus: p.bonus, total: p.tx * PT_TX + p.faucet * PT_FAUCET + val + p.bonus }; }
+function board() { const addrs = new Set(Object.keys(S.pts).concat(S.community.map((c) => c.addr))); return [...addrs].map(pointsOf).filter((x) => x.total > 0).sort((a, b) => b.total - a.total); }
 
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
@@ -143,7 +156,7 @@ http.createServer(async (req, res) => {
     if (p === '/api/faucet' && req.method === 'POST') { const { address } = await body(req);
       if (!/^qpf1[0-9a-f]{40}$/.test(address || '')) return send(res, 400, { error: 'bad address' });
       const last = S.faucet[address] || 0; if (Date.now() - last < FAUCET_COOLDOWN) return send(res, 429, { error: 'faucet cooldown', retryIn: Math.ceil((FAUCET_COOLDOWN - (Date.now() - last)) / 60000) + ' min' });
-      S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT }); }
+      S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; ptOf(address).faucet++; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT }); }
     if (p === '/api/tx' && req.method === 'POST') { const t = await body(req); t.fee = FEE; const err = checkTx(t); if (err) return send(res, 400, { error: err });
       mempool.push(t); return send(res, 200, { ok: true, hash: txHash(t), verified: 'ML-DSA-44' }); }
     if (p === '/api/pending') return send(res, 200, pending ? { chain: CHAIN_ID, height: pending.header.height, hash: pending.hash, proposer: pending.prop.addr, proposerName: pending.prop.name, header: pending.header } : { height: null });
@@ -165,9 +178,14 @@ http.createServer(async (req, res) => {
     if (p === '/api/validator/exit' && req.method === 'POST') { const o = await body(req); o.kind = 'exit-validator'; const i = S.community.findIndex((x) => x.pub === o.pub);
       if (i < 0) return send(res, 404, { error: 'unknown validator' }); if (!verify(regBody(o), o.pub, o.sig || '', 'ML-DSA-65')) return send(res, 400, { error: 'invalid ML-DSA-65 signature' });
       const c = S.community[i]; acct(c.addr).bal += c.stake; S.community.splice(i, 1); dirty = true; return send(res, 200, { ok: true, returned: c.stake }); }
+    if (p === '/api/points') { const b = board(); return send(res, 200, { season: 'Season 0', rules: { tx: PT_TX, txCapPerDay: TX_CAP, faucet: PT_FAUCET, attest: PT_ATT, propose: PT_PROP, miss: -PT_MISS }, participants: b.length, top: b.slice(0, 100).map((x, i) => ({ rank: i + 1, ...x })) }); }
+    if (p.startsWith('/api/points/') && req.method === 'GET') { const a = p.slice(12); const b = board(); const i = b.findIndex((x) => x.addr === a); return send(res, 200, { rank: i < 0 ? null : i + 1, of: b.length, ...pointsOf(a) }); }
+    if (p === '/api/points/grant' && req.method === 'POST') { if (!ADMIN_KEY || req.headers['x-admin-key'] !== ADMIN_KEY) return send(res, 403, { error: 'forbidden' });
+      const { address, points, note } = await body(req); if (!/^qpf1[0-9a-f]{40}$/.test(address || '') || !Number.isFinite(points)) return send(res, 400, { error: 'address + points' });
+      const pp = ptOf(address); pp.bonus += points; pp.notes.push({ points, note: String(note || '').slice(0, 140), at: Date.now() }); dirty = true; return send(res, 200, { ok: true, bonus: pp.bonus }); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

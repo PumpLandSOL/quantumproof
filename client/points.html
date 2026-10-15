@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuantumProof Points</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<style>
+.hero{padding:70px 0 10px}.hero h1{font-size:clamp(40px,6vw,72px);letter-spacing:-.04em;line-height:1.02;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:780px;margin-top:18px}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}.rules .card{padding:24px}.rules b{display:block;font-size:19px;margin:10px 0 10px}.rules li{color:var(--mu);font-size:14px;line-height:1.9;list-style:none;display:flex;justify-content:space-between;border-bottom:1px solid var(--line)}.rules li span:last-child{font-family:'JetBrains Mono';color:var(--or2)}
+h2{font-size:30px;letter-spacing:-.02em;margin:56px 0 6px}.sub{color:var(--mu);font-size:15px;line-height:1.7}
+.look{display:flex;gap:10px;margin-top:16px}.look input{flex:1;background:#0a0705;border:1px solid var(--line2);border-radius:10px;padding:13px 14px;color:var(--tx);font-family:'JetBrains Mono';font-size:13px}
+#me{margin-top:12px;font-family:'JetBrains Mono';font-size:14px;color:var(--mu)}
+table.vt{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}.vt th{text-align:left;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line2)}
+.vt td{padding:12px;border-bottom:1px solid var(--line)}.vt .m{font-family:'JetBrains Mono';font-size:13px}.vt .num{text-align:right;font-family:'JetBrains Mono'}.tw{overflow-x:auto}
+.note{margin-top:56px;padding:26px 28px}.note p{color:var(--mu);font-size:14px;line-height:1.8;margin-top:8px}
+@media(max-width:900px){.rules{grid-template-columns:1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// testnet points · season 0</span>
+<h1>Build the network. <span class="g">Get on the record.</span></h1>
+<p>Every validator signature, transfer and confirmed bug report on the QuantumProof testnet earns points, tracked publicly on this page. Points will be considered for mainnet genesis allocation.</p>
+<div class="rules">
+<div class="card"><span class="kick">Validators</span><b>Run a node</b><ul><li><span>Attestation included in a block</span><span>+1</span></li><li><span>Block proposed</span><span>+4</span></li><li><span>Missed proposer slot</span><span>−4</span></li></ul><p class="sub" style="font-size:13px;margin-top:12px"><a href="/validators" style="color:var(--or2)">How to run a node →</a></p></div>
+<div class="card"><span class="kick">Users</span><b>Use the chain</b><ul><li><span>Transfer sent (to someone else)</span><span>+2</span></li><li><span>Daily cap</span><span>25 tx</span></li><li><span>Faucet claim (hourly)</span><span>+5</span></li></ul><p class="sub" style="font-size:13px;margin-top:12px"><a href="/wallet" style="color:var(--or2)">Open the wallet →</a></p></div>
+<div class="card"><span class="kick">Builders</span><b>Break things</b><ul><li><span>Confirmed bug report</span><span>bonus</span></li><li><span>Tools on the node API</span><span>bonus</span></li><li><span>Signature / consensus issues</span><span>top bonus</span></li></ul><p class="sub" style="font-size:13px;margin-top:12px"><a href="https://x.com/QuantumProofL1" target="_blank" style="color:var(--or2)">Report via DM on X →</a></p></div>
+</div></section>
+
+<h2>Check your points</h2><p class="sub">Paste your wallet address or validator address.</p>
+<div class="look"><input id="q" placeholder="qpf1…" spellcheck="false"><button class="btn" onclick="look()">Check</button></div><div id="me"></div>
+
+<h2>Leaderboard</h2><p class="sub" id="sum"></p>
+<div class="card tw" style="margin-top:6px"><table class="vt"><thead><tr><th>#</th><th>Address</th><th class="num">Validator</th><th class="num">Transfers</th><th class="num">Faucet</th><th class="num">Bonus</th><th class="num">Total</th></tr></thead><tbody id="lb"></tbody></table></div>
+
+<div class="card note"><span class="kick">The fine print, in plain words</span>
+<p>Points will be considered for mainnet genesis allocation. No amounts, conversion rate or allocation formula have been set, and none is promised here. tQPF itself has no monetary value.</p>
+<p>Points reward real participation. Activity that looks like farming (many wallets or validators run by one person, self-transfers, scripted loops) may be excluded or adjusted before any allocation. Rules can change during the season; changes will be posted here.</p>
+<p>Separately, $QPF holders migrate 1:1 to native QPF at mainnet via snapshot, as stated on the roadmap.</p></div>
+</main>
+<script src="/common.js"></script><script>chrome('/points');
+const sh = (a) => a.slice(0, 10) + '…' + a.slice(-6), n = (x) => (+x).toLocaleString(), esc = (s) => String(s).replace(/</g, '&lt;');
+async function load() { const d = await (await fetch('/api/points')).json();
+  document.getElementById('sum').textContent = d.participants.toLocaleString() + ' participants · ' + d.season + ' · updates every block';
+  document.getElementById('lb').innerHTML = d.top.length ? d.top.map((x) => `<tr><td class="m">${x.rank}</td><td class="m">${x.name ? '<b style="color:var(--tx)">' + esc(x.name) + '</b> · ' : ''}${sh(x.addr)}</td><td class="num">${n(x.validatorPts)}</td><td class="num">${n(x.txPts)}</td><td class="num">${n(x.faucetPts)}</td><td class="num">${n(x.bonus)}</td><td class="num" style="color:var(--or2);font-weight:700">${n(x.total)}</td></tr>`).join('') : '<tr><td colspan="7" style="color:var(--mu);padding:24px 12px">Season 0 just started. Claim from the faucet or run a node to get on the board.</td></tr>'; }
+async function look() { const a = document.getElementById('q').value.trim(); if (!/^qpf1[0-9a-f]{40}$/.test(a)) { document.getElementById('me').textContent = 'Enter a qpf1… address (44 characters).'; return; }
+  const x = await (await fetch('/api/points/' + a)).json();
+  document.getElementById('me').innerHTML = `<span style="color:var(--or2);font-size:22px;font-weight:700">${n(x.total)} pts</span> &nbsp; ${x.rank ? 'rank #' + x.rank + ' of ' + n(x.of) : 'not ranked yet'} · validator ${n(x.validatorPts)} · transfers ${n(x.txPts)} · faucet ${n(x.faucetPts)} · bonus ${n(x.bonus)}`; }
+load(); setInterval(load, 8000);
+</script></body></html>

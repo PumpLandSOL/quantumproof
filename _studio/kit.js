@@ -133,6 +133,25 @@ const P = {
       <div><div class="dim" style="font-size:22px">$QPF TODAY</div><div style="font-size:48px;font-weight:700;margin-top:6px">$565K</div></div></div>
      <div class="mu" style="font-size:28px;line-height:1.45;margin-top:36px">ZEC hit $28B on privacy built on elliptic curves. QPF is built for the threat that breaks them.</div>
     </div></div></div>`),
+  'qpf-validators': page(2400, 1350, `<div style="position:absolute;left:120px;top:0;bottom:170px;width:1150px;display:flex;flex-direction:column;justify-content:center">
+   <div class="k" style="font-size:26px">// testnet · validator set open</div>
+   <div style="font-size:132px;font-weight:700;letter-spacing:-.045em;line-height:.98;margin-top:22px">Run a node.<br><span class="g">Sign the chain.</span></div>
+   <div class="mu" style="font-size:36px;line-height:1.45;margin-top:34px">Your machine. Your ML-DSA-65 key. Every block header signed with a 3,309-byte post-quantum signature.</div>
+   <div style="display:flex;gap:20px;margin-top:44px">${[['STAKE','500 tQPF'],['PER BLOCK','2 tQPF + fees'],['PER ATTEST','0.25 tQPF']].map(([k,v])=>`<div class="card" style="padding:24px 32px"><div class="m dim" style="font-size:21px">${k}</div><div style="font-size:42px;font-weight:700;margin-top:8px">${v}</div></div>`).join('')}</div></div>
+   <div class="card" style="position:absolute;right:120px;top:190px;width:900px;padding:0;overflow:hidden;border-color:rgba(255,122,24,.45);box-shadow:0 0 90px rgba(255,122,24,.2)">
+    <div style="display:flex;gap:12px;padding:22px 28px;border-bottom:2px solid rgba(255,122,24,.2)"><i style="width:18px;height:18px;border-radius:50%;background:#3a2c22"></i><i style="width:18px;height:18px;border-radius:50%;background:#3a2c22"></i><i style="width:18px;height:18px;border-radius:50%;background:#3a2c22"></i><span class="m dim" style="font-size:22px;margin-left:14px">terminal</span></div>
+    <div class="m" style="padding:34px 36px;font-size:25px;line-height:1.75">
+     <div><span class="dim">$</span> curl -O quantumproofchain.net/qpf-node.js</div>
+     <div><span class="dim">$</span> node qpf-node.js <span style="color:#ffb347">"Your Name"</span></div>
+     <div class="mu" style="margin-top:14px">new ML-DSA-65 validator key</div>
+     <div class="mu">staked 500 tQPF, joined the validator set</div>
+     <div>#1281 <span class="ok">attested</span> <span class="dim">· ML-DSA-65 3,309 B</span></div>
+     <div>#1282 <span class="ok">attested</span> <span class="dim">· ML-DSA-65 3,309 B</span></div>
+     <div>#1283 <span style="color:#ff7a18;font-weight:700">PROPOSED</span> <span class="dim">· ML-DSA-65 3,309 B</span></div>
+     <div>#1284 <span class="ok">attested</span> <span class="dim">· ML-DSA-65 3,309 B</span></div>
+    </div>
+    <div class="m" style="padding:22px 36px;border-top:2px solid rgba(255,122,24,.2);font-size:28px;color:#ffb347">quantumproofchain.net/validators</div>
+   </div>`),
 };
 const SIZES = { 'qpf-pfp': [2000, 2000], 'qpf-banner': [3000, 1000] };
 (async () => {

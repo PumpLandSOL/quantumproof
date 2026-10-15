@@ -334,3 +334,18 @@ quantumproofchain.net/explorer
 
 $QPF
 ```
+
+## 28. qpf-validators.png
+```
+The QuantumProof validator set is open on testnet.
+
+Run one file. Stake 500 tQPF. Sign blocks with your own ML-DSA-65 key.
+
+2 tQPF per block + fees
+0.25 tQPF per attestation
+
+Two commands to join:
+quantumproofchain.net/validators
+
+$QPF
+```

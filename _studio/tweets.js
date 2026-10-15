@@ -222,6 +222,17 @@ quantumproofchain.net/wallet
 quantumproofchain.net/explorer
 
 $QPF`],
+  ['qpf-validators.png', `The QuantumProof validator set is open on testnet.
+
+Run one file. Stake 500 tQPF. Sign blocks with your own ML-DSA-65 key.
+
+2 tQPF per block + fees
+0.25 tQPF per attestation
+
+Two commands to join:
+quantumproofchain.net/validators
+
+$QPF`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });
