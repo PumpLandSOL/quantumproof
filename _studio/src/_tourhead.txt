@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.win{position:absolute;left:190px;top:118px;width:900px;height:562px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,122,24,.4);box-shadow:0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(255,122,24,.15);background:#0b0806}
+.bar{height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#140e0a;border-bottom:1px solid rgba(255,122,24,.2)}.bar i{width:11px;height:11px;border-radius:50%;background:#3a2c22;display:block}
+.url{margin-left:14px;flex:1;height:24px;border-radius:7px;background:#050403;font-family:'JetBrains Mono';font-size:13px;display:flex;align-items:center;padding:0 12px;color:#a3968a}.url b{color:#f5efe8;font-weight:500}
+.vp{position:absolute;top:38px;left:0;right:0;bottom:0;overflow:hidden}.vp img{position:absolute;left:0;top:0;width:900px;transform-origin:0 0}
+.hl{position:absolute;border:2px solid #4dff9a;border-radius:8px;box-shadow:0 0 24px rgba(77,255,154,.5)}
+.cap{position:absolute;left:0;right:0;top:40px;text-align:center}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">No renders. No mockups.</div><div class="d" style="font-size:70px;line-height:1.05;margin-top:16px">Don't trust us.<br><span class="g">Check the chain.</span></div><div class="m mu" style="font-size:18px;margin-top:20px">Real captures from quantumproofchain.net · testnet live</div></div></div>

@@ -404,3 +404,29 @@ $ZEC: 220,880x
 $SOL: 712,053x
 $ETH: 3,405,639x
 ```
+
+## 33. qpf-scanner-21s.mp4
+```
+Is your wallet quantum-exposed?
+
+Paste any BTC, ETH or SOL address. We read the live chain and show if its public key is already exposed to Shor's algorithm.
+
+Satoshi: exposed. Vitalik: exposed.
+
+quantumproofchain.net/scan
+
+$QPF
+```
+
+## 34. qpf-forge-19s.mp4
+```
+The Forge Challenge is live.
+
+One ML-DSA-65 public key. The secret key was discarded at birth, nobody holds it, not even us.
+
+Forge one valid signature and the bounty is yours.
+
+quantumproofchain.net/forge
+
+$QPF
+```
