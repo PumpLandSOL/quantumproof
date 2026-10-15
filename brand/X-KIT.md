@@ -430,3 +430,14 @@ quantumproofchain.net/forge
 
 $QPF
 ```
+
+## 35. qpf-quantumdex-21s.mp4
+```
+First look: QuantumDEX.
+
+The premier DEX for QuantumProof Chain. Swap, pool and trade, with every swap signed ML-DSA in your browser and every block finalized post-quantum.
+
+Coming to mainnet.
+
+$QPF
+```

@@ -67,7 +67,7 @@ function simulate(txs) { // pick the txs that will apply, without mutating state
 }
 function makeHeader(prop, applied) {
   const prev = S.blocks.length ? S.blocks[S.blocks.length - 1].hash : '0'.repeat(64);
-  const txRoot = sha3(applied.map((t) => txHash(t)).join('') || 'empty');
+  const txRoot = sha3(applied.map((t) => t.hash || txHash(t)).join('') || 'empty');
   const header = { height: S.height + 1, prev, time: Date.now(), txRoot, proposer: prop.addr, txCount: applied.length };
   return { header, hash: sha3(canon(header)) };
 }
@@ -75,9 +75,9 @@ function startSlot() {
   if (pending) return;
   const set = S.validators.concat(S.community.filter(online));
   const prop = set[S.height % set.length];
-  const txs = mempool.splice(0, 200), applied = simulate(txs);
-  const { header, hash } = makeHeader(prop, applied);
-  pending = { header, hash, prop, txs, applied, sigs: new Map(), core: S.validators.includes(prop) };
+  const txs = mempool.splice(0, 200), applied = simulate(txs), dx = dexPending.splice(0);
+  const { header, hash } = makeHeader(prop, applied.concat(dx));
+  pending = { header, hash, prop, txs, applied, dx, sigs: new Map(), core: S.validators.includes(prop) };
   setTimeout(finalize, SIGN_WINDOW_MS);
 }
 function finalize() {
@@ -86,7 +86,7 @@ function finalize() {
   const propSig = P.core ? null : P.sigs.get(prop.addr);
   if (!P.core && !propSig) { // community proposer offline: skip it, a core validator takes the slot
     prop.missed = (prop.missed || 0) + 1; prop = S.validators[S.height % S.validators.length];
-    ({ header, hash } = makeHeader(prop, P.applied)); comm = [];
+    ({ header, hash } = makeHeader(prop, P.applied.concat(P.dx))); comm = [];
   }
   const sign = (val) => crypto.sign(null, Buffer.from(hash), skOf(val)).toString('hex');
   const pSig = S.validators.includes(prop) ? sign(prop) : propSig.sig;
@@ -94,11 +94,12 @@ function finalize() {
     .concat(comm.filter((c) => c.addr !== prop.addr).map((c) => ({ validator: c.addr, name: c.name, sig: c.sig, community: true })));
   const valOf = (addr) => S.validators.find((x) => x.addr === addr) || S.community.find((x) => x.addr === addr);
   const ok = verify(hash, prop.pub, pSig, 'ML-DSA-65') && atts.filter((x) => verify(hash, valOf(x.validator).pub, x.sig, 'ML-DSA-65')).length >= 2;
-  if (!ok) { mempool = P.txs.concat(mempool); return; }
+  if (!ok) { mempool = P.txs.concat(mempool); dexPending = P.dx.concat(dexPending); return; }
   const applied = [];
   for (const t of P.applied) { const a = acct(t.from), b = acct(t.to); if (a.bal < t.amount + t.fee - 1e-9 || t.nonce !== a.nonce) continue;
     a.bal -= t.amount + t.fee; a.nonce++; a.pub = t.pub; a.txs++; b.bal += t.amount; b.txs++;
     applied.push({ hash: txHash(t), from: t.from, to: t.to, amount: t.amount, fee: t.fee, nonce: t.nonce, kind: t.kind || 'transfer', sigBytes: 2420 }); if (t.to !== t.from) ptTx(t.from); }
+  applied.push(...P.dx);
   const fees = applied.reduce((x, t) => x + t.fee, 0);
   acct(prop.addr).bal += fees + BLOCK_REWARD; prop.rewards = (prop.rewards || 0) + fees + BLOCK_REWARD;
   for (const x of atts) { acct(x.validator).bal += ATT_REWARD; const v = valOf(x.validator); v.rewards = (v.rewards || 0) + ATT_REWARD; v.attested = (v.attested || 0) + 1; }
@@ -174,6 +175,53 @@ const forgeMsg = (addr) => 'quantumproof-forge-v1:' + addr;
 const forgeAddr = addrOf(S.forge.pub);
 const lastTry = new Map();
 
+// ---------- QuantumDEX: constant-product AMM (tQPF / tUSD) ----------
+// Every op is signed ML-DSA-44 by the wallet and verified with FIPS 204 before it touches the pool. Ops execute
+// immediately (own nonce, "dnonce") and are written into the next block's tx list, so every swap is in the explorer.
+const POOL_ADDR = 'qpf1' + '0'.repeat(32) + 'de000001', DEX_FEE_BPS = 30, USD_FAUCET = 50;
+S.pool = S.pool || { q: 10000000, u: 100000, shares: { [POOL_ADDR]: 1000000 }, total: 1000000, hist: [], swaps: [], vol: [] };
+let dexPending = [];
+const dexBody = (o) => canon({ amount: o.amount, chain: CHAIN_ID, dnonce: o.dnonce, fee: FEE, from: o.from, kind: o.kind, minOut: o.minOut, side: o.side || '' });
+const price = () => S.pool.u / S.pool.q;
+const outAmt = (inAmt, rin, rout) => { const x = inAmt * (1 - DEX_FEE_BPS / 1e4); return (x * rout) / (rin + x); };
+function dexOp(o) {
+  if (!o || !['swap', 'add', 'remove'].includes(o.kind)) return 'bad kind';
+  if (!/^qpf1[0-9a-f]{40}$/.test(o.from || '')) return 'bad address';
+  if (!(o.amount > 0) || !isFinite(o.amount) || o.amount > 1e12) return 'bad amount';
+  if (!(o.minOut >= 0) || !isFinite(o.minOut)) return 'bad minOut';
+  if (!/^[0-9a-f]{2624}$/.test(o.pub || '') || addrOf(o.pub) !== o.from) return 'pubkey must be the ML-DSA-44 key for from';
+  if (!/^[0-9a-f]{4840}$/.test(o.sig || '') || !verify(dexBody(o), o.pub, o.sig, 'ML-DSA-44')) return 'invalid ML-DSA signature';
+  S.sigsVerified++;
+  const a = acct(o.from); a.usd = a.usd || 0; a.dn = a.dn || 0;
+  if (o.dnonce !== a.dn) return 'bad dnonce (expected ' + a.dn + ')';
+  const P = S.pool; let rec;
+  if (o.kind === 'swap') {
+    if (o.side === 'sell') { if (a.bal < o.amount + FEE - 1e-9) return 'insufficient tQPF'; const out = outAmt(o.amount, P.q, P.u); if (out < o.minOut) return 'slippage: would receive ' + out.toFixed(4) + ' tUSD';
+      a.bal -= o.amount + FEE; a.usd += out; P.q += o.amount; P.u -= out; rec = { side: 'sell', inAmt: o.amount, out, inSym: 'tQPF', outSym: 'tUSD', usd: out }; }
+    else if (o.side === 'buy') { if (a.usd < o.amount - 1e-9) return 'insufficient tUSD'; if (a.bal < FEE) return 'need 0.001 tQPF for the network fee'; const out = outAmt(o.amount, P.u, P.q); if (out < o.minOut) return 'slippage: would receive ' + out.toFixed(4) + ' tQPF';
+      a.usd -= o.amount; a.bal -= FEE; a.bal += out; P.u += o.amount; P.q -= out; rec = { side: 'buy', inAmt: o.amount, out, inSym: 'tUSD', outSym: 'tQPF', usd: o.amount }; }
+    else return 'side must be buy or sell';
+    ptTx(o.from);
+  } else if (o.kind === 'add') { // amount = tQPF; matching tUSD at pool ratio; minOut = max tUSD willing to add
+    const needU = o.amount * P.u / P.q; if (needU > o.minOut + 1e-9) return 'price moved: needs ' + needU.toFixed(4) + ' tUSD'; if (a.bal < o.amount + FEE - 1e-9 || a.usd < needU - 1e-9) return 'insufficient balance';
+    const sh = o.amount / P.q * P.total; a.bal -= o.amount + FEE; a.usd -= needU; P.q += o.amount; P.u += needU; P.total += sh; P.shares[o.from] = (P.shares[o.from] || 0) + sh;
+    rec = { side: 'add', inAmt: o.amount, out: needU, inSym: 'tQPF', outSym: 'tUSD', usd: needU * 2 };
+  } else { // remove: amount = shares
+    const have = P.shares[o.from] || 0; if (o.amount > have + 1e-9) return 'not enough LP shares'; if (a.bal < FEE) return 'need 0.001 tQPF for the network fee';
+    const fr = o.amount / P.total, dq = P.q * fr, du = P.u * fr; P.q -= dq; P.u -= du; P.total -= o.amount; P.shares[o.from] = have - o.amount; a.bal += dq - FEE; a.usd += du;
+    rec = { side: 'remove', inAmt: dq, out: du, inSym: 'tQPF', outSym: 'tUSD', usd: du * 2 };
+  }
+  a.dn++; const hash = sha3(dexBody(o) + o.sig), now = Date.now();
+  const row = { hash, from: o.from, ...rec, price: price(), at: now };
+  P.swaps.unshift(row); if (P.swaps.length > 60) P.swaps.length = 60;
+  P.hist.push([now, price()]); if (P.hist.length > 600) P.hist.splice(0, P.hist.length - 600);
+  P.vol.push([now, rec.usd]); P.vol = P.vol.filter((v) => now - v[0] < 864e5);
+  dexPending.push({ hash, from: o.from, to: POOL_ADDR, amount: rec.inAmt, fee: FEE, nonce: o.dnonce, kind: o.kind === 'swap' ? 'swap-' + rec.side : o.kind + '-liquidity', detail: rec.inAmt.toFixed(4) + ' ' + rec.inSym + ' → ' + rec.out.toFixed(4) + ' ' + rec.outSym, sigBytes: 2420 });
+  dirty = true; return { ok: true, hash, ...row };
+}
+const dexState = () => { const P = S.pool, day = P.hist.filter((h) => Date.now() - h[0] < 864e5); return { pair: 'tQPF/tUSD', pool: POOL_ADDR, reserves: { tQPF: P.q, tUSD: P.u }, price: price(), tvl: P.u * 2, lpShares: P.total, feeBps: DEX_FEE_BPS,
+  volume24h: P.vol.reduce((x, v) => x + v[1], 0), change24h: day.length ? price() / day[0][1] - 1 : 0, swaps: P.swaps.slice(0, 25), hist: P.hist.slice(-300) }; };
+
 // ---------- http ----------
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
@@ -199,7 +247,7 @@ http.createServer(async (req, res) => {
     if (p === '/api/faucet' && req.method === 'POST') { const { address } = await body(req);
       if (!/^qpf1[0-9a-f]{40}$/.test(address || '')) return send(res, 400, { error: 'bad address' });
       const last = S.faucet[address] || 0; if (Date.now() - last < FAUCET_COOLDOWN) return send(res, 429, { error: 'faucet cooldown', retryIn: Math.ceil((FAUCET_COOLDOWN - (Date.now() - last)) / 60000) + ' min' });
-      S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; ptOf(address).faucet++; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT }); }
+      S.faucet[address] = Date.now(); acct(address).bal += FAUCET_AMT; ptOf(address).faucet++; acct(address).usd = (acct(address).usd || 0) + USD_FAUCET; dirty = true; return send(res, 200, { ok: true, amount: FAUCET_AMT, tUSD: USD_FAUCET }); }
     if (p === '/api/tx' && req.method === 'POST') { const t = await body(req); t.fee = FEE; const err = checkTx(t); if (err) return send(res, 400, { error: err });
       mempool.push(t); return send(res, 200, { ok: true, hash: txHash(t), verified: 'ML-DSA-44' }); }
     if (p === '/api/pending') return send(res, 200, pending ? { chain: CHAIN_ID, height: pending.header.height, hash: pending.hash, proposer: pending.prop.addr, proposerName: pending.prop.name, header: pending.header } : { height: null });
@@ -234,9 +282,12 @@ http.createServer(async (req, res) => {
       S.forge.attempts++; dirty = true; const ok = /^[0-9a-f]+$/.test(sig || '') && verify(forgeMsg(address), S.forge.pub, sig, 'ML-DSA-65');
       if (!ok) return send(res, 200, { ok: false, attempts: S.forge.attempts, result: 'invalid signature. ML-DSA holds.' });
       S.forge.winner = { address, at: Date.now(), sig }; acct(address).bal += FORGE_TQPF; return send(res, 200, { ok: true, result: 'VALID FORGERY', winner: S.forge.winner }); }
+    if (p === '/api/dex' && req.method === 'GET') return send(res, 200, dexState());
+    if (p.startsWith('/api/dex/account/')) { const a = p.slice(17), ac = S.accounts[a] || {}; return send(res, 200, { address: a, tQPF: ac.bal || 0, tUSD: ac.usd || 0, dnonce: ac.dn || 0, lpShares: S.pool.shares[a] || 0, lpTotal: S.pool.total }); }
+    if (p === '/api/dex' && req.method === 'POST') { const r = dexOp(await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); }
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

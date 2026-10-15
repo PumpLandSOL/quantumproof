@@ -1,0 +1,55 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>
+.app{position:absolute;inset:0}.nav{position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;gap:26px;padding:0 34px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.01em}.tabs{display:flex;gap:6px;margin-left:18px}.tabs span{padding:8px 14px;border-radius:12px;font-size:15px;color:#a3968a}.tabs .on{color:#f5efe8;background:rgba(255,122,24,.1)}
+.srch{margin-left:auto;width:300px;height:38px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,122,24,.15);color:#5e544b;font-size:14px;display:flex;align-items:center;padding:0 14px}
+.conn{height:38px;padding:0 16px;border-radius:12px;background:rgba(255,122,24,.15);color:#ffb347;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.card2{position:absolute;left:50%;top:104px;width:470px;margin-left:-235px;border-radius:24px;padding:10px;background:#0d0906;border:1px solid rgba(255,122,24,.18);box-shadow:0 0 120px rgba(255,90,0,.12)}
+.ct{display:flex;align-items:center;padding:8px 10px 12px;gap:14px;font-size:15px}.ct b{font-weight:600}.ct span{color:#5e544b}
+.pane{background:#160f0a;border-radius:18px;padding:18px 18px 16px;height:118px;position:relative;border:1px solid transparent}
+.pl{font-size:14px;color:#a3968a}.amt{font-size:38px;font-weight:500;margin-top:8px;letter-spacing:-.02em}.usd{font-size:13px;color:#5e544b;margin-top:6px}
+.tok{position:absolute;right:16px;top:44px;height:40px;border-radius:99px;padding:0 14px 0 6px;display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px;background:#1f150e;border:1px solid rgba(255,122,24,.2)}
+.tok i{width:28px;height:28px;border-radius:50%;display:block}.bal{position:absolute;right:18px;bottom:14px;font-size:12px;color:#5e544b}
+.flip{position:absolute;left:50%;margin-left:-20px;width:40px;height:40px;border-radius:12px;background:#160f0a;border:4px solid #0d0906;display:grid;place-items:center;color:#ffb347;font-size:18px;z-index:2}
+.go{margin-top:6px;height:58px;border-radius:18px;display:grid;place-items:center;font-weight:700;font-size:19px;background:linear-gradient(92deg,#ffb347,#ff7a18 50%,#ff3d00);color:#140800}
+.det{margin:12px 8px 4px;font-size:13px;color:#a3968a;display:grid;gap:7px}.det div{display:flex;justify-content:space-between}.det b{color:#f5efe8;font-weight:500}
+.mod{position:absolute;left:50%;top:150px;width:440px;margin-left:-220px;border-radius:24px;padding:28px;background:#0d0906;border:1px solid rgba(255,122,24,.3);box-shadow:0 30px 120px rgba(0,0,0,.8);text-align:center}
+.sig{font-family:'JetBrains Mono';font-size:10.5px;line-height:1.45;color:#ffb347;word-break:break-all;height:96px;overflow:hidden;text-align:left;margin-top:16px;background:#0a0705;border-radius:12px;padding:10px;border:1px solid rgba(255,122,24,.15)}
+.tag{position:absolute;right:28px;bottom:22px;font-family:'JetBrains Mono';font-size:12px;color:#5e544b;letter-spacing:.12em}
+</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">Coming to QuantumProof mainnet</div><div class="d" style="font-size:84px;line-height:1;margin-top:16px">Quantum<span class="g">DEX</span></div><div class="mu" style="font-size:22px;margin-top:18px">The first DEX where every swap is signed post-quantum.</div></div></div>
+<div class="app" id="app">
+ <div class="nav"><div class="logo"><svg viewBox="0 0 40 40" style="width:30px;height:30px"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".55" stop-color="#ff7a18"/><stop offset="1" stop-color="#ff3d00"/></linearGradient></defs><path d="M20 3 35 11.5v17L20 37 5 28.5v-17Z" fill="none" stroke="url(#lg)" stroke-width="2.6"/><circle cx="20" cy="20" r="5" fill="url(#lg)"/></svg>Quantum<span class="g">DEX</span></div>
+  <div class="tabs"><span class="on">Swap</span><span>Pool</span><span>Explore</span><span>Bridge</span></div><div class="srch">Search tokens and pools</div><div class="conn" id="conn">Connect</div></div>
+ <div class="card2" id="card"><div class="ct"><b>Swap</b><span>Limit</span><span>Send</span><span style="margin-left:auto">⚙</span></div>
+  <div class="pane" id="p1"><div class="pl">You pay</div><div class="amt" id="a1">0</div><div class="usd" id="u1">$0.00</div><div class="tok"><i style="background:radial-gradient(circle at 35% 35%,#ffb347,#ff3d00)"></i>QPF ▾</div><div class="bal" id="b1"></div></div>
+  <div style="position:relative;height:6px"><div class="flip" style="top:-23px">↓</div></div>
+  <div class="pane"><div class="pl">You receive</div><div class="amt" id="a2">0</div><div class="usd" id="u2">$0.00</div><div class="tok"><i style="background:radial-gradient(circle at 35% 35%,#8fd3ff,#2b6cff)"></i>qUSD ▾</div><div class="bal" id="b2"></div></div>
+  <div class="go" id="go">Connect wallet</div>
+  <div class="det" id="det"><div><span>Rate</span><b>1 QPF = 0.0000879 qUSD</b></div><div><span>Network fee</span><b>0.001 QPF</b></div><div><span>Signature</span><b style="color:#4dff9a">ML-DSA-44 · 2,420 B</b></div><div><span>Route</span><b>QPF → qUSD · 0.3% pool</b></div></div></div>
+ <div class="mod" id="mod"><div class="k" id="mk">Signing</div><div class="d" style="font-size:26px;margin-top:10px" id="mt"></div><div class="sig" id="sig"></div><div class="m" style="font-size:13px;margin-top:14px" id="ms"></div></div>
+ <div class="tag">DESIGN PREVIEW · COMING TO MAINNET</div>
+</div>
+<div class="c" id="s9"><div><div class="k">Coming to QuantumProof mainnet</div><div class="d" style="font-size:66px;line-height:1.05;margin-top:14px">Swap, pool, trade.<br><span class="g">Zero elliptic curves.</span></div><div class="mu" style="font-size:21px;margin-top:20px">Every swap signed with ML-DSA. Every block finalized post-quantum.</div><div class="m" style="font-size:24px;margin-top:26px;color:#ffb347">quantumproofchain.net · $QPF</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.35)=>cl((t-a)/f)*cl((b-t)/f);
+let sd=3;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;const SIG=Array.from({length:4840},()=>'0123456789abcdef'[Math.floor(r()*16)]).join('');
+const cv=$('bg'),x=cv.getContext('2d'),S=64,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+const fmt=(n,d=2)=>n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+window.__seek=(t)=>{x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1;for(const[px,py]of P){x.strokeStyle=`rgba(255,122,24,${.04+.03*Math.sin(t*1.3+px*.01+py*.01)})`;x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}
+ $('s0').style.opacity=win(t,0,3);$('app').style.opacity=win(t,3,18.6);$('s9').style.opacity=e((t-18.6)/.5);
+ const cp=e((t-3.2)/.6);$('card').style.transform=`translateY(${(1-cp)*30}px)`;$('card').style.opacity=cp;
+ const conn=t>=4.6;$('conn').innerHTML=conn?'<span style="width:9px;height:9px;border-radius:50%;background:#4dff9a;display:inline-block"></span>qpf1c4f0…2642':'Connect';
+ $('b1').textContent=conn?'Balance: 4,200,000 QPF':'';$('b2').textContent=conn?'Balance: 0 qUSD':'';
+ const typed='2,500,000'.slice(0,Math.floor(cl((t-5.6)/1.2)*9)),amt=+typed.replace(/,/g,'')||0;
+ $('a1').textContent=typed||'0';$('a1').style.color=typed?'#f5efe8':'#5e544b';$('p1').style.borderColor=t>5.4&&t<7.2?'rgba(255,122,24,.5)':'transparent';
+ $('a2').textContent=amt?fmt(amt*0.0000879):'0';$('a2').style.color=amt?'#f5efe8':'#5e544b';$('u1').textContent='$'+fmt(amt*0.0000879);$('u2').textContent='$'+fmt(amt*0.0000879*0.997);
+ $('det').style.opacity=e((t-7)/.4);$('det').style.maxHeight=t>7?'200px':'0';
+ $('go').textContent=!conn?'Connect wallet':!amt?'Enter an amount':t<11.6?'Swap':'Swap';$('go').style.opacity=!conn||!amt?.45:1;$('go').style.transform=t>8.4&&t<8.7?'scale(.97)':'';
+ const m=win(t,8.8,15.6,.3);$('mod').style.opacity=m;$('mod').style.transform=`translateY(${(1-m)*20}px)`;$('card').style.filter=m>0?`blur(${m*3}px)`:'';
+ const lt=t-8.8;if(lt<3){$('mk').textContent='Step 1 / 3 · signing in your browser';$('mt').innerHTML='Signing swap with <span class="g">ML-DSA-44</span>';$('sig').textContent=SIG.slice(0,Math.floor(cl(lt/2.4)*4840));$('ms').innerHTML=`<span class="mu">${Math.floor(cl(lt/2.4)*2420).toLocaleString()} / 2,420 bytes</span>`;}
+ else if(lt<4.8){$('mk').textContent='Step 2 / 3 · network verification';$('mt').innerHTML='FIPS 204 verify';$('ms').innerHTML=lt>3.8?'<span class="ok">✓ signature valid · applied to pool</span>':'<span class="mu">verifying…</span>';}
+ else{$('mk').textContent='Step 3 / 3 · finality';$('mt').innerHTML='<span class="ok">Swap confirmed</span>';$('ms').innerHTML='<span class="mu">block finalized by 4 validators · ML-DSA-65 × 4</span><br><span style="color:#f5efe8;font-size:16px;line-height:2.2">2,500,000 QPF → '+fmt(2500000*0.0000879*0.997)+' qUSD</span>';}
+};window.__seek(0);
+</script>

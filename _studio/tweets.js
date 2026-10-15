@@ -290,6 +290,13 @@ Forge one valid signature and the bounty is yours.
 quantumproofchain.net/forge
 
 $QPF`],
+  ['qpf-quantumdex-21s.mp4', `First look: QuantumDEX.
+
+The premier DEX for QuantumProof Chain. Swap, pool and trade, with every swap signed ML-DSA in your browser and every block finalized post-quantum.
+
+Coming to mainnet.
+
+$QPF`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });
