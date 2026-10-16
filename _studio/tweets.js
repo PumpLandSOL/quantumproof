@@ -329,9 +329,9 @@ No install. Live leaderboard.
 quantumproofchain.net/node`],
   ['qpf-checklist-day2.png', `Day two checklist.
 
-New since day one: QuantumDEX, the Lifeboat, Quantum Vaults, browser validators, the Exposure Scanner and the Forge Challenge.
+New since day one: Public RPC + SDK, QuantumDEX, the Lifeboat, Quantum Vaults, browser validators, the Exposure Scanner, the Forge.
 
-Next: gossip, public RPC, audit, mainnet, 1:1 migration.
+Next: gossip, audit, mainnet, 1:1 migration.
 
 $QPF`],
   ['qpf-mainnet-preview.png', `Mainnet preview.
