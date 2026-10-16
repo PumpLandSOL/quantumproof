@@ -341,6 +341,13 @@ ML-DSA-65 blocks. ML-DSA-44 accounts. SHA3-256. 4s blocks. Native QPF.
 Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and Vaults from block one.
 
 Testnet is live today.`],
+  ['qpf-mainnet-hype-31s.mp4', `Mainnet is days away.
+
+Pre-mainnet price action is simply noise. We are building the most powerful, secure quantum-proof L1 blockchain the space has ever seen.
+
+$ZEC topped at $28B. $QRL at $254M.
+
+$QPF`],
 ];
 let md = `# QuantumProof X kit\n\nX: https://x.com/QuantumProofL1 · site: https://quantumproofchain.net\n\n## Bio\n\`\`\`\n${BIO}\n\`\`\`\n`, bad = 0;
 T.forEach(([f, t], i) => { const n = [...t].length; if (n > 245) bad++; console.log(String(i + 1).padStart(2), n, f); md += `\n## ${i + 1}. ${f}\n\`\`\`\n${t}\n\`\`\`\n`; });
