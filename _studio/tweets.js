@@ -345,7 +345,7 @@ Testnet is live today.`],
 
 Pre-mainnet price action is simply noise. We are building the most powerful, secure quantum-proof L1 blockchain the space has ever seen.
 
-$ZEC topped at $28B. $QRL at $254M.
+$ZEC topped at $28B. $STRK at $1.1B.
 
 $QPF`],
 ];
