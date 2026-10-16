@@ -487,3 +487,25 @@ No install. Live leaderboard.
 
 quantumproofchain.net/node
 ```
+
+## 40. qpf-checklist-day2.png
+```
+Day two checklist.
+
+New since day one: QuantumDEX, the Lifeboat, Quantum Vaults, browser validators, the Exposure Scanner and the Forge Challenge.
+
+Next: gossip, public RPC, audit, mainnet, 1:1 migration.
+
+$QPF
+```
+
+## 41. qpf-mainnet-preview.png
+```
+Mainnet preview.
+
+ML-DSA-65 blocks. ML-DSA-44 accounts. SHA3-256. 4s blocks. Native QPF.
+
+Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and Vaults from block one.
+
+Testnet is live today.
+```
