@@ -312,6 +312,34 @@ function approve(v, p, o, viaPropose) {
 }
 
 // ---------- http ----------
+// ---------- public JSON-RPC 2.0 (POST /rpc, CORS open, batches allowed) ----------
+let rpcCalls = 0; const RPC_HITS = new Map();
+const RPC = {
+  qpf_chainId: () => CHAIN_ID,
+  qpf_blockNumber: () => S.height,
+  qpf_getBlock: ([k, full]) => { const b = S.blocks.find((x) => String(x.height) === String(k) || x.hash === k) || (k === 'latest' && S.blocks[S.blocks.length - 1]); if (!b) return null;
+    return full ? b : { ...slim(b), prev: b.prev, txRoot: b.txRoot, proposer: b.proposer, alg: b.alg, txs: b.txList.map((t) => t.hash) }; },
+  qpf_getBalance: ([a]) => { const ac = S.accounts[a] || {}; return { address: a, tQPF: ac.bal || 0, tUSD: ac.usd || 0 }; },
+  qpf_getAccount: ([a]) => { const ac = S.accounts[a] || { bal: 0, nonce: 0, txs: 0 }, pend = mempool.filter((m) => m.from === a).length; return { address: a, balance: ac.bal, nonce: ac.nonce + pend, txs: ac.txs, pubKnown: !!ac.pub, vault: !!S.vaults[a] }; },
+  qpf_getTransaction: ([h]) => { const b = S.blocks.find((x) => x.height === S.txIndex[h]); const t = b && b.txList.find((x) => x.hash === h); return t ? { ...t, block: b.height, blockHash: b.hash, time: b.time } : null; },
+  qpf_sendTransaction: ([t]) => { t = { ...t, fee: FEE }; const err = checkTx(t); if (err) throw { code: -32000, message: err }; mempool.push(t); return { hash: txHash(t), verified: 'ML-DSA-44' }; },
+  qpf_requestFaucet: ([a]) => { if (!ADDR_RE.test(a || '')) throw { code: -32602, message: 'bad address' }; const last = S.faucet[a] || 0;
+    if (Date.now() - last < FAUCET_COOLDOWN) throw { code: -32001, message: 'faucet cooldown: ' + Math.ceil((FAUCET_COOLDOWN - (Date.now() - last)) / 60000) + ' min' };
+    S.faucet[a] = Date.now(); acct(a).bal += FAUCET_AMT; acct(a).usd = (acct(a).usd || 0) + USD_FAUCET; ptOf(a).faucet++; dirty = true; return { tQPF: FAUCET_AMT, tUSD: USD_FAUCET }; },
+  qpf_estimateFee: () => ({ fee: FEE, unit: 'tQPF', sigBytes: 2420 }),
+  qpf_verify: ([msg, pub, sig, alg]) => { alg = alg || 'ML-DSA-44'; if (!['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'].includes(alg)) throw { code: -32602, message: 'alg must be ML-DSA-44/65/87' }; return { valid: verify(String(msg), pub, sig, alg), alg }; },
+  qpf_getValidators: () => ({ core: S.validators.map(coreVal), community: S.community.map(pubVal) }),
+  qpf_getPending: () => (pending ? { height: pending.header.height, hash: pending.hash, proposer: pending.prop.addr, header: pending.header } : null),
+  qpf_getPool: () => { const d = dexState(); delete d.hist; return d; },
+  qpf_getVault: ([a]) => (S.vaults[a] ? vaultView(S.vaults[a]) : null),
+  qpf_algorithms: () => ({ blocks: 'ML-DSA-65', tx: 'ML-DSA-44', hash: 'SHA3-256', address: 'qpf1 + sha3_256(pubkey)[0..20]', standard: 'NIST FIPS 204' }),
+};
+function rpcOne(m) {
+  if (!m || m.jsonrpc !== '2.0' || typeof m.method !== 'string') return { jsonrpc: '2.0', id: m && m.id != null ? m.id : null, error: { code: -32600, message: 'invalid request' } };
+  const f = RPC[m.method]; if (!f) return { jsonrpc: '2.0', id: m.id ?? null, error: { code: -32601, message: 'method not found: ' + m.method } };
+  try { rpcCalls++; return { jsonrpc: '2.0', id: m.id ?? null, result: f(Array.isArray(m.params) ? m.params : m.params != null ? [m.params] : []) }; }
+  catch (e) { return { jsonrpc: '2.0', id: m.id ?? null, error: e && e.code ? e : { code: -32603, message: String((e && e.message) || e) } }; }
+}
 const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/png', '.mp4': 'video/mp4', '.pdf': 'application/pdf' };
 const body = (req) => new Promise((ok) => { let d = ''; req.on('data', (c) => { d += c; if (d.length > 2e5) req.destroy(); }); req.on('end', () => { try { ok(JSON.parse(d || '{}')); } catch { ok({}); } }); });
@@ -384,9 +412,15 @@ http.createServer(async (req, res) => {
       return send(res, 200, { count: all.length, held: all.reduce((s, v) => s + ((S.accounts[v.addr] || {}).bal || 0), 0), executed: all.reduce((s, v) => s + v.executed, 0), vaults: list }); }
     if (p.startsWith('/api/vault/') && req.method === 'GET') { const v = S.vaults[p.slice(11)]; return v ? send(res, 200, vaultView(v)) : send(res, 404, { error: 'unknown vault' }); }
     if (/^\/api\/vault\/(create|propose|approve)$/.test(p) && req.method === 'POST') { const r = vaultOp(p.slice(11), await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); }
+    if (p === '/rpc' && (req.method === 'POST' || req.method === 'OPTIONS')) { const H = { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, OPTIONS', 'cache-control': 'no-store' };
+      if (req.method === 'OPTIONS') { res.writeHead(204, H); return res.end(); }
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress, sec = Math.floor(Date.now() / 1000), h = RPC_HITS.get(ip); if (h && h[0] === sec && h[1] >= 40) { res.writeHead(429, H); return res.end(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limit: 40 req/s' } })); }
+      RPC_HITS.set(ip, h && h[0] === sec ? [sec, h[1] + 1] : [sec, 1]); if (RPC_HITS.size > 5000) RPC_HITS.clear();
+      const m = await body(req); const out = Array.isArray(m) ? m.slice(0, 50).map(rpcOne) : rpcOne(m); res.writeHead(200, H); return res.end(JSON.stringify(out)); }
+    if (p === '/api/rpcstats') return send(res, 200, { calls: rpcCalls, methods: Object.keys(RPC) });
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html', '/vault': 'vault.html', '/node': 'node.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html', '/vault': 'vault.html', '/node': 'node.html', '/rpc': 'rpc.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }

@@ -341,6 +341,13 @@ ML-DSA-65 blocks. ML-DSA-44 accounts. SHA3-256. 4s blocks. Native QPF.
 Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and Vaults from block one.
 
 Testnet is live today.`],
+  ['qpf-rpc-22s.mp4', `Public RPC is live. Another box checked.
+
+JSON-RPC 2.0, no API key, open CORS. Plus qpf.js: post-quantum transactions in five lines, signed ML-DSA-44 locally, finalized in the next block.
+
+Build: quantumproofchain.net/rpc
+
+$QPF`],
   ['qpf-mainnet-hype-31s.mp4', `Mainnet is days away.
 
 Pre-mainnet price action is simply noise. We are building the most powerful, secure quantum-proof L1 blockchain the space has ever seen.
