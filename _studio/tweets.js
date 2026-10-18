@@ -341,6 +341,20 @@ ML-DSA-65 blocks. ML-DSA-44 accounts. SHA3-256. 4s blocks. Native QPF.
 Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and Vaults from block one.
 
 Testnet is live today.`],
+  ['qpf-vs-chains.png', `Here's an update on how QPF fully stacks up compared to other blockchains.
+
+✓ ML-DSA, NIST FIPS 204
+✓ No elliptic-curve keys
+✓ Browser validators
+✓ PQ DEX + vaults
+✓ Launchpad
+✓ Solana migration
+
+BTC, ETH, SOL: none.
+
+Mainnet Mon 8 PM ET.
+
+$QPF`],
   ['qpf-checklist-final.png', `Pre-mainnet checklist.
 
 ✓ ML-DSA on every block

@@ -510,7 +510,25 @@ Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and
 Testnet is live today.
 ```
 
-## 42. qpf-checklist-final.png
+## 42. qpf-vs-chains.png
+```
+Here's an update on how QPF fully stacks up compared to other blockchains.
+
+✓ ML-DSA, NIST FIPS 204
+✓ No elliptic-curve keys
+✓ Browser validators
+✓ PQ DEX + vaults
+✓ Launchpad
+✓ Solana migration
+
+BTC, ETH, SOL: none.
+
+Mainnet Mon 8 PM ET.
+
+$QPF
+```
+
+## 43. qpf-checklist-final.png
 ```
 Pre-mainnet checklist.
 
@@ -526,7 +544,7 @@ Pre-mainnet checklist.
 $QPF
 ```
 
-## 43. qpf-roadmap-final.png
+## 44. qpf-roadmap-final.png
 ```
 Roadmap update.
 
@@ -540,7 +558,7 @@ quantumproof-1. Native QPF. $QPF claims 1:1.
 $QPF
 ```
 
-## 44. qpf-mainnet-countdown-20s.mp4
+## 45. qpf-mainnet-countdown-20s.mp4
 ```
 T-minus 24 hours.
 
@@ -553,7 +571,7 @@ quantumproofchain.net
 $QPF
 ```
 
-## 45. qpf-launchpad-30s.mp4
+## 46. qpf-launchpad-30s.mp4
 ```
 Introducing the QuantumProof Launchpad.
 
@@ -566,7 +584,7 @@ quantumproofchain.net/launchpad
 $QPF
 ```
 
-## 46. qpf-launchpad-how.png
+## 47. qpf-launchpad-how.png
 ```
 How the QuantumProof Launchpad works:
 
@@ -577,7 +595,7 @@ How the QuantumProof Launchpad works:
 $QPF
 ```
 
-## 47. qpf-launchpad-gate.png
+## 48. qpf-launchpad-gate.png
 ```
 Tech launches have to prove it.
 
@@ -588,7 +606,7 @@ No repo, no TECH badge.
 $QPF
 ```
 
-## 48. qpf-launchpad-vs.png
+## 49. qpf-launchpad-vs.png
 ```
 pump.fun peaked at $8.8B fully diluted. Virtuals $5.1B. Zora $1.5B.
 
@@ -601,7 +619,7 @@ quantumproofchain.net/launchpad
 $QPF
 ```
 
-## 49. qpf-rpc-22s.mp4
+## 50. qpf-rpc-22s.mp4
 ```
 Public RPC is live. Another box checked.
 
@@ -612,7 +630,7 @@ Build: quantumproofchain.net/rpc
 $QPF
 ```
 
-## 50. qpf-mainnet-hype-31s.mp4
+## 51. qpf-mainnet-hype-31s.mp4
 ```
 Mainnet is days away.
 
