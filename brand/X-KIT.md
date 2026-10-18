@@ -510,7 +510,55 @@ Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and
 Testnet is live today.
 ```
 
-## 42. qpf-rpc-22s.mp4
+## 42. qpf-launchpad-30s.mp4
+```
+Introducing the QuantumProof Launchpad.
+
+Launch memes, or launch tech that proves it: a live GitHub check and on-repo ownership proof before it lists.
+
+Every launch and trade signed with ML-DSA.
+
+quantumproofchain.net/launchpad
+
+$QPF
+```
+
+## 43. qpf-launchpad-how.png
+```
+How the QuantumProof Launchpad works:
+
+1. Sign the launch with ML-DSA
+2. Trade on a bonding curve in tQPF (1% fee: half to the creator, half burned)
+3. Fill the curve at 8,500 tQPF and graduate
+
+$QPF
+```
+
+## 44. qpf-launchpad-gate.png
+```
+Tech launches have to prove it.
+
+Public repo, not a fork, pushed in the last 180 days, and your qpf1 address in the repo. Then a Tech Score, re-checked every 12 hours.
+
+No repo, no TECH badge.
+
+$QPF
+```
+
+## 45. qpf-launchpad-vs.png
+```
+pump.fun peaked at $8.8B fully diluted. Virtuals $5.1B. Zora $1.5B.
+
+All of them sign with elliptic curves. None verify tech.
+
+The QuantumProof Launchpad does both.
+
+quantumproofchain.net/launchpad
+
+$QPF
+```
+
+## 46. qpf-rpc-22s.mp4
 ```
 Public RPC is live. Another box checked.
 
@@ -521,7 +569,7 @@ Build: quantumproofchain.net/rpc
 $QPF
 ```
 
-## 43. qpf-mainnet-hype-31s.mp4
+## 47. qpf-mainnet-hype-31s.mp4
 ```
 Mainnet is days away.
 
