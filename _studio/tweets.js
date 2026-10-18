@@ -341,6 +341,28 @@ ML-DSA-65 blocks. ML-DSA-44 accounts. SHA3-256. 4s blocks. Native QPF.
 Day one on mainnet: $QPF migrates 1:1, Lifeboat seats carry over, QuantumDEX and Vaults from block one.
 
 Testnet is live today.`],
+  ['qpf-checklist-final.png', `Pre-mainnet checklist.
+
+✓ ML-DSA on every block
+✓ Wallet, explorer, validators
+✓ QuantumDEX + Vaults
+✓ Lifeboat, Scanner, Forge
+✓ Public RPC + SDK
+✓ Launchpad
+
+☐ Mainnet: Mon, Oct 19, 8 PM ET
+
+$QPF`],
+  ['qpf-roadmap-final.png', `Roadmap update.
+
+Phase 1, Launch: done.
+Phase 2, Network: done.
+Phase 3, Ecosystem: done.
+Phase 4, Mainnet: Monday, Oct 19, 8 PM ET.
+
+quantumproof-1. Native QPF. $QPF claims 1:1.
+
+$QPF`],
   ['qpf-mainnet-countdown-20s.mp4', `T-minus 24 hours.
 
 QuantumProof mainnet goes live Monday, Oct 19 at 8 PM ET.
