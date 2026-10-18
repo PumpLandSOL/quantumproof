@@ -313,6 +313,7 @@ function approve(v, p, o, viaPropose) {
 
 // ---------- http ----------
 // ---------- launchpad (server/launchpad.js) ----------
+const migRoute = require('./migrate')({ S, QPF_MINT, save: () => { dirty = true; } });
 const lpRoute = require('./launchpad')({ S, acct, sha3, canon, CHAIN_ID, pqAuth, pushTx: (t) => dexPending.push(t), ptTx, save: () => { dirty = true; } });
 
 // ---------- public JSON-RPC 2.0 (POST /rpc, CORS open, batches allowed) ----------
@@ -411,6 +412,7 @@ http.createServer(async (req, res) => {
     if (p === '/api/lifeboat/msg') return send(res, 200, { message: boardMsg(u.searchParams.get('sol') || '', u.searchParams.get('qpf') || '') });
     if (p.startsWith('/api/lifeboat/seat/')) { const k = decodeURIComponent(p.slice(19)); const b = S.boats.find((x) => x.sol === k || x.qpf === k); return b ? send(res, 200, b) : send(res, 404, { error: 'no seat' }); }
     if (p === '/api/lifeboat' && req.method === 'POST') { try { const r = await boardBoat(await body(req)); return typeof r === 'string' ? send(res, 400, { error: r }) : send(res, 200, r); } catch (e) { return send(res, 502, { error: String(e.message || e) }); } }
+    if (await migRoute(p, req, res, u, (c, o) => send(res, c, o), () => body(req))) return;
     if (await lpRoute(p, req, res, u, (c, o) => send(res, c, o), () => body(req, 600000))) return;
     if (p === '/api/vaults') { const m = u.searchParams.get('member'); const all = Object.values(S.vaults); const list = (m ? all.filter((v) => v.signers.includes(m)) : all).sort((a, b) => b.created - a.created).slice(0, 50).map(vaultView);
       return send(res, 200, { count: all.length, held: all.reduce((s, v) => s + ((S.accounts[v.addr] || {}).bal || 0), 0), executed: all.reduce((s, v) => s + v.executed, 0), vaults: list }); }
@@ -424,7 +426,7 @@ http.createServer(async (req, res) => {
     if (p === '/api/rpcstats') return send(res, 200, { calls: rpcCalls, methods: Object.keys(RPC) });
     if (p === '/api/live') { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' }); res.write(': hi\n\n'); subs.add(res); req.on('close', () => subs.delete(res)); return; }
     // static
-    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html', '/vault': 'vault.html', '/node': 'node.html', '/rpc': 'rpc.html', '/launchpad': 'launchpad.html' };
+    const routes = { '/': 'index.html', '/explorer': 'explorer.html', '/wallet': 'wallet.html', '/docs': 'docs.html', '/whitepaper': 'whitepaper.html', '/validators': 'validators.html', '/points': 'points.html', '/scan': 'scan.html', '/forge': 'forge.html', '/dex': 'dex.html', '/lifeboat': 'lifeboat.html', '/vault': 'vault.html', '/node': 'node.html', '/rpc': 'rpc.html', '/launchpad': 'launchpad.html', '/migrate': 'migrate.html' };
     let f = routes[p] || p.slice(1); if (p.startsWith('/explorer/')) f = 'explorer.html';
     const fp = path.join(CLIENT, path.normalize(f).replace(/^(\.\.[\/\\])+/, ''));
     if (!fp.startsWith(CLIENT) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) { res.writeHead(404); return res.end('not found'); }
