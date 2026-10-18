@@ -1,0 +1,154 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuantumProof Launchpad</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
+<meta property="og:title" content="QuantumProof Launchpad: launch on a post-quantum chain"><meta property="og:description" content="Memes and GitHub-verified tech, launched on QuantumProof. Every trade signed with ML-DSA.">
+<style>
+.hero{text-align:center;padding:64px 0 10px;position:relative}.hero h1{font-size:clamp(42px,6.4vw,86px);letter-spacing:-.045em;line-height:1;margin-top:16px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:720px;margin:18px auto 0}
+.ctas{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}.big{padding:16px 28px;font-size:17px;border-radius:14px;flex-direction:column;align-items:flex-start;gap:2px}.big small{display:block;font-size:11.5px;font-family:'JetBrains Mono';opacity:.75;margin-top:4px;font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:38px}.kpis .card{padding:16px 18px}.k,.lbl{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}.kpis .v{font-size:24px;font-weight:700;margin-top:6px}
+.bar{display:flex;gap:8px;align-items:center;margin-top:34px;flex-wrap:wrap}.tab{background:none;border:1px solid var(--line);color:var(--mu);font-family:inherit;font-size:14px;padding:9px 16px;border-radius:99px;cursor:pointer}.tab.on{color:#140800;background:linear-gradient(92deg,var(--or2),var(--or));border-color:transparent;font-weight:700}
+select{width:auto;background:#0a0705;color:var(--tx);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-family:inherit}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+.tk{padding:16px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;overflow:hidden}.tk:hover{transform:translateY(-3px);border-color:var(--line2)}
+.tk .h{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center}.tk img{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--line2);background:#1a120c}
+.sym{font-weight:700;font-size:18px}.nm{color:var(--mu);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;padding:3px 8px;border-radius:99px;border:1px solid}.b-tech{color:var(--ok);border-color:rgba(77,255,154,.5)}.b-meme{color:var(--or2);border-color:var(--line2)}.b-grad{color:#8fd3ff;border-color:rgba(143,211,255,.5)}
+.tk .d{color:var(--mu);font-size:13px;line-height:1.5;margin-top:10px;height:39px;overflow:hidden}.row{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:12px;margin-top:10px;color:var(--mu)}.row b{color:var(--tx);font-weight:500}
+.prog{height:7px;border-radius:9px;background:#1a120c;margin-top:8px;overflow:hidden}.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--or2),var(--or),var(--hot))}
+.empty{grid-column:1/-1;padding:40px;text-align:center;color:var(--mu)}
+/* drawer */
+.ov{position:fixed;inset:0;background:rgba(5,4,3,.72);backdrop-filter:blur(4px);z-index:60;display:none}.ov.on{display:block}
+.dr{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#0d0906;border-left:1px solid var(--line2);z-index:61;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:24px}.dr.on{transform:none}
+.dr .h{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center}.dr .h img{width:72px;height:72px;border-radius:14px;object-fit:cover;border:1px solid var(--line2)}
+.x{background:none;border:1px solid var(--line2);color:var(--tx);border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:16px}
+.chart{margin-top:16px;padding:12px}.chart svg{width:100%;height:170px;display:block}
+.trade{margin-top:12px;padding:14px}.seg{display:flex;gap:6px}.seg button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line2);background:none;color:var(--mu);font-family:inherit;font-weight:700;cursor:pointer}.seg .on.b{background:rgba(77,255,154,.12);color:var(--ok);border-color:rgba(77,255,154,.5)}.seg .on.s{background:rgba(255,90,77,.12);color:#ff7a6e;border-color:rgba(255,90,77,.5)}
+input,textarea{width:100%;background:#0a0705;border:1px solid var(--line2);border-radius:10px;padding:12px;color:var(--tx);font-family:'JetBrains Mono';font-size:13.5px;outline:0;margin-top:6px}textarea{height:72px;resize:vertical;font-family:inherit}
+.quote{font-family:'JetBrains Mono';font-size:12.5px;color:var(--mu);margin-top:8px;display:grid;gap:4px}.quote span{display:flex;justify-content:space-between}
+.full{width:100%;justify-content:center;margin-top:12px;padding:14px}
+.list{margin-top:12px;padding:6px 14px}.li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-family:'JetBrains Mono';font-size:12px}.li:last-child{border:0}
+.techp{margin-top:12px;padding:14px;border-color:rgba(77,255,154,.4)}
+#msg,#lmsg{font-family:'JetBrains Mono';font-size:12.5px;margin-top:10px;line-height:1.6;word-break:break-word}.okc{color:var(--ok)}.bad{color:#ff6e5e}
+/* launch modal */
+.md{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,4,3,.78);backdrop-filter:blur(6px)}.md.on{display:flex}
+.mc{width:min(640px,100%);max-height:94vh;overflow:auto;padding:26px;background:#0d0906}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.ty{padding:16px;border-radius:14px;border:1px solid var(--line2);cursor:pointer;background:none;color:var(--tx);text-align:left;font-family:inherit}.ty.on{border-color:var(--or);background:rgba(255,122,24,.08);box-shadow:0 0 30px rgba(255,122,24,.15)}.ty .badge{display:inline-flex}.ty b{display:block;font-size:17px;margin-top:8px}.ty span{color:var(--mu);font-size:13px;line-height:1.5;display:block;margin-top:4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f{margin-top:12px}
+.checks{display:grid;gap:6px;margin-top:10px;font-family:'JetBrains Mono';font-size:12.5px}.checks div{display:flex;gap:8px}
+.addrbox{margin-top:8px;padding:10px 12px;border:1px dashed var(--line2);border-radius:10px;font-family:'JetBrains Mono';font-size:12px;word-break:break-all;color:var(--or2)}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.grid{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="kick">// quantumproof launchpad · native</span>
+<h1>Launch on a chain<br><span class="g">quantum can't break.</span></h1>
+<p>Tokens born on QuantumProof. Every launch, buy and sell is signed with ML-DSA in your browser and finalized post-quantum. Memes launch free-form. Tech launches prove a real GitHub repo first.</p>
+<div class="ctas"><button class="btn pri big" onclick="openLaunch('meme')">Launch a meme<small>name · ticker · image · go</small></button><button class="btn big" style="border-color:rgba(77,255,154,.5)" onclick="openLaunch('tech')">Launch tech ✓<small>GitHub-verified · Tech Score</small></button></div>
+<div class="kpis" id="kp"></div></section>
+<div class="bar"><button class="tab on" data-f="all">All</button><button class="tab" data-f="tech">Tech ✓</button><button class="tab" data-f="meme">Memes</button><button class="tab" data-f="graduated">Graduated</button><span class="sp"></span>
+ <select id="sort"><option value="new">Newest</option><option value="active">Last trade</option><option value="mcap">Market cap</option><option value="score">Tech Score</option></select></div>
+<div class="grid" id="grid"></div>
+</main>
+<div class="ov" id="ov" onclick="closeDr()"></div>
+<aside class="dr" id="dr"></aside>
+<div class="md" id="md"><div class="card mc">
+ <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:26px;letter-spacing:-.02em">Launch on QuantumProof</h2><button class="x" onclick="$('md').classList.remove('on')">✕</button></div>
+ <div class="types"><button class="ty" id="ty-meme" onclick="setType('meme')"><span class="badge b-meme">MEME</span><b>Meme</b><span>Name, ticker, image. Launches instantly.</span></button><button class="ty" id="ty-tech" onclick="setType('tech')"><span class="badge b-tech">TECH ✓</span><b>Tech</b><span>Needs a public GitHub repo you control. Gets a Tech Score and the verified badge.</span></button></div>
+ <div class="g2 f"><div><div class="lbl">Name</div><input id="nm" maxlength="32" placeholder="Lattice Labs"></div><div><div class="lbl">Ticker</div><input id="tk" maxlength="10" placeholder="LATT"></div></div>
+ <div class="f"><div class="lbl">Description</div><textarea id="ds" maxlength="280" placeholder="what is it"></textarea></div>
+ <div class="f"><div class="lbl">Image</div><div style="display:flex;gap:12px;align-items:center;margin-top:6px"><img id="pv" style="width:64px;height:64px;border-radius:12px;border:1px solid var(--line2);object-fit:cover;background:#1a120c"><input type="file" id="im" accept="image/png,image/jpeg,image/gif,image/webp" style="border:0;padding:0;background:none"></div></div>
+ <div id="techf" style="display:none">
+  <div class="f"><div class="lbl">GitHub repo</div><div style="display:flex;gap:8px"><input id="repo" placeholder="https://github.com/you/project"><button class="btn" style="margin-top:6px;white-space:nowrap" onclick="verifyRepo()">Verify</button></div></div>
+  <div class="lbl" style="margin-top:12px">Ownership proof · add this address to your README or a quantumproof.txt file</div><div class="addrbox" id="myaddr">—</div>
+  <div class="checks" id="checks"></div></div>
+ <div class="g2 f"><div><div class="lbl">X (optional)</div><input id="lx" placeholder="https://x.com/…"></div><div><div class="lbl">Website (optional)</div><input id="ls" placeholder="https://…"></div></div>
+ <div class="f"><div class="lbl" style="display:flex;justify-content:space-between">Dev buy <b id="dbv" style="color:var(--tx)">0 tQPF</b></div><input type="range" id="db" min="0" max="2000" step="10" value="0" style="padding:0;accent-color:var(--or)"></div>
+ <div class="quote" id="lq"></div>
+ <button class="btn pri full" id="lgo">Launch</button><div id="lmsg"></div>
+</div></div>
+<script src="/common.js"></script><script type="module">
+import { ml_dsa44 } from 'https://cdn.jsdelivr.net/npm/@noble/post-quantum@0.2.1/ml-dsa.js/+esm';
+import { sha3_256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.5.0/sha3.js/+esm';
+chrome('/launchpad');
+const $ = (i) => document.getElementById(i), hex = (u) => [...u].map((b) => b.toString(16).padStart(2, '0')).join(''), unhex = (h) => new Uint8Array(h.match(/../g).map((x) => parseInt(x, 16)));
+const canon = (o) => JSON.stringify(o, Object.keys(o).sort()), CH = 'quantumproof-testnet-1', enc = (s) => new TextEncoder().encode(s);
+const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+const n = (x, d = 2) => (+x).toLocaleString(undefined, { maximumFractionDigits: d }), big = (x) => x >= 1e6 ? (x / 1e6).toFixed(2) + 'M' : x >= 1e3 ? (x / 1e3).toFixed(1) + 'K' : (+x).toFixed(x < 10 ? 2 : 0);
+const px = (p) => p < 1e-4 ? p.toExponential(3) : p.toFixed(6);
+let W = null; try { const s = localStorage.getItem('qpf_seed'); if (s) { const k = ml_dsa44.keygen(unhex(s)); const pub = hex(k.publicKey); W = { sk: k.secretKey, pub, addr: 'qpf1' + hex(sha3_256(unhex(pub))).slice(0, 40) }; } } catch {}
+const sign = (m) => hex(ml_dsa44.sign(W.sk, enc(m)));
+const post = async (u, b) => { const r = await fetch(u, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }); return r.json(); };
+let F = 'all', P = null, CUR = null, SIDE = 'buy', TYPE = 'meme', IMG = null, VER = null;
+// ---------- board ----------
+async function load() { const d = await (await fetch(`/api/launchpad?f=${F}&sort=${$('sort').value}`)).json(); P = d.stats.params; const s = d.stats;
+  $('kp').innerHTML = [['Tokens', s.tokens], ['Tech verified', s.tech], ['Graduated', s.graduated], ['Volume', big(s.volume) + ' tQPF'], ['tQPF burned', big(s.burned)]].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  $('grid').innerHTML = d.tokens.length ? d.tokens.map(card).join('') : `<div class="card empty">${F === 'all' ? 'No tokens yet. Be the first to launch on a post-quantum chain.' : 'Nothing here yet.'}<div class="ctas" style="margin-top:14px"><button class="btn pri" onclick="openLaunch('${F === 'tech' ? 'tech' : 'meme'}')">Launch one</button></div></div>`;
+  if (CUR) openToken(CUR, true); }
+function card(t) { return `<div class="card tk" onclick="openToken('${t.id}')"><div class="h"><img src="${t.image}" alt=""><div style="min-width:0"><div class="sym">$${esc(t.symbol)}</div><div class="nm">${esc(t.name)}</div></div></div>
+  <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">${t.type === 'tech' ? `<span class="badge b-tech">TECH ✓ ${t.tech && t.tech.score ? t.tech.score : ''}</span>${t.tech && t.tech.lang ? `<span class="badge b-meme">${esc(t.tech.lang)}</span>` : ''}` : '<span class="badge b-meme">MEME</span>'}${t.graduated ? '<span class="badge b-grad">GRADUATED</span>' : ''}</div>
+  <div class="d">${esc(t.desc || '')}</div><div class="row"><span>mcap <b>${big(t.mcap)} tQPF</b></span><span>${t.holders} holders</span></div>
+  <div class="prog"><i style="width:${(t.progress * 100).toFixed(1)}%"></i></div><div class="row" style="margin-top:6px"><span>${t.graduated ? 'graduated ✓' : (t.progress * 100).toFixed(1) + '% to graduation'}</span><span>${ago(t.lastTrade)}</span></div></div>`; }
+document.querySelectorAll('.tab').forEach((b) => b.onclick = () => { F = b.dataset.f; document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b)); load(); });
+$('sort').onchange = load;
+// ---------- token drawer ----------
+window.closeDr = () => { CUR = null; $('dr').classList.remove('on'); $('ov').classList.remove('on'); };
+window.openToken = async (id, quiet) => { CUR = id; const t = await (await fetch('/api/launchpad/token/' + id)).json(); if (t.error) return;
+  const acc = W ? await (await fetch('/api/launchpad/account/' + W.addr)).json() : null, mine = acc ? (acc.holdings.find((h) => h.id === id) || { bal: 0 }).bal : 0;
+  if (quiet && $('amt') && document.activeElement === $('amt')) return;
+  const keep = $('amt') ? $('amt').value : '';
+  $('dr').innerHTML = `<div class="h"><img src="${t.image}"><div style="min-width:0"><div class="sym" style="font-size:24px">$${esc(t.symbol)}</div><div class="nm" style="font-size:14px">${esc(t.name)}</div>
+    <div style="display:flex;gap:6px;margin-top:6px">${t.type === 'tech' ? '<span class="badge b-tech">TECH ✓</span>' : '<span class="badge b-meme">MEME</span>'}${t.graduated ? '<span class="badge b-grad">GRADUATED</span>' : ''}</div></div><button class="x" onclick="closeDr()">✕</button></div>
+   ${t.desc ? `<p style="color:var(--mu);font-size:14px;line-height:1.6;margin-top:14px">${esc(t.desc)}</p>` : ''}
+   <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-top:14px">${[['Price', px(t.price) + ' tQPF'], ['Market cap', big(t.mcap) + ' tQPF'], ['Raised', n(t.raised, 0) + ' / ' + P.gradQ.toLocaleString()]].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v" style="font-size:17px">${v}</div></div>`).join('')}</div>
+   <div class="prog" style="height:9px;margin-top:10px"><i style="width:${(t.progress * 100).toFixed(1)}%"></i></div>
+   <div class="card chart"><svg viewBox="0 0 500 170" preserveAspectRatio="none">${chart(t.hist)}</svg></div>
+   ${t.type === 'tech' && t.tech ? `<div class="card techp"><div class="k" style="color:var(--ok)">GitHub verified${t.tech.verified ? '' : ' · re-check failed'}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><a href="${esc(t.tech.url)}" target="_blank" style="font-weight:700">${esc(t.tech.repo)} ↗</a><span class="m" style="font-size:22px;font-weight:700;color:var(--ok)">${t.tech.score || '—'}<span style="font-size:12px;color:var(--mu)"> /100</span></span></div>
+     <div class="row"><span>${esc(t.tech.lang || '')} · ★ ${t.tech.stars || 0}</span><span>last push ${t.tech.pushed ? ago(Date.parse(t.tech.pushed)) : '—'}</span></div><div class="row"><span>ownership proof in ${esc(t.tech.proofIn || '—')}</span></div></div>` : ''}
+   <div class="card trade"><div class="seg"><button class="b ${SIDE === 'buy' ? 'on' : ''}" onclick="setSide('buy')">Buy</button><button class="s ${SIDE === 'sell' ? 'on' : ''}" onclick="setSide('sell')">Sell</button></div>
+    <div class="lbl" style="margin-top:12px">${SIDE === 'buy' ? 'Spend tQPF' : 'Sell $' + esc(t.symbol)}</div><input id="amt" inputmode="decimal" placeholder="0" value="${keep}">
+    <div class="quote" id="q"></div><button class="btn pri full" id="go">${W ? (SIDE === 'buy' ? 'Buy' : 'Sell') + ' · sign ML-DSA-44' : 'Create a wallet first'}</button><div id="msg"></div>
+    <div class="row"><span>you hold <b>${n(mine, 0)} $${esc(t.symbol)}</b></span><span>${acc ? n(acc.tQPF, 2) + ' tQPF' : ''}</span></div></div>
+   <div class="card list"><div class="k" style="padding:6px 0">Trades · every row is an ML-DSA-signed tx</div>${t.trades.length ? t.trades.slice(0, 14).map((r) => `<div class="li"><span style="color:${r.side === 'buy' ? 'var(--ok)' : '#ff7a6e'}">${r.side.toUpperCase()}</span><span>${big(r.n)} for ${n(r.q, 3)} tQPF</span><span class="dim">${short(r.from, 7, 4)} · ${ago(r.at)}</span></div>`).join('') : '<div class="li"><span class="dim">no trades yet</span></div>'}</div>
+   <div class="card list"><div class="k" style="padding:6px 0">Top holders</div>${t.top.length ? t.top.map((h) => `<div class="li"><span>${h.addr === t.creator ? 'dev · ' : ''}${short(h.addr, 8, 4)}</span><span>${(h.pct * 100).toFixed(2)}%</span></div>`).join('') : '<div class="li"><span class="dim">none yet</span></div>'}</div>
+   <div class="row" style="margin-top:12px"><span>creator ${short(t.creator, 8, 4)} · earned ${n(t.creatorFees, 3)} tQPF</span><a href="/explorer/account/${t.id}">explorer ↗</a></div>`;
+  $('dr').classList.add('on'); $('ov').classList.add('on'); window.T = t; window.MINE = mine; quote();
+  $('amt').oninput = quote; $('go').onclick = () => W ? doTrade() : location.href = '/wallet'; };
+window.setSide = (s) => { SIDE = s; if ($('amt')) $('amt').value = ''; openToken(CUR); };
+function chart(h) { if (!h || h.length < 2) return '<text x="250" y="90" text-anchor="middle" fill="#5e544b" font-family="JetBrains Mono" font-size="12">chart starts with the first trade</text>';
+  const ys = h.map((x) => x[1]), lo = Math.min(...ys), hi = Math.max(...ys), sy = (v) => 160 - (hi === lo ? 70 : (v - lo) / (hi - lo) * 140), sx = (i) => i / (h.length - 1) * 500;
+  const d = h.map((x, i) => (i ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(x[1]).toFixed(1)).join(' ');
+  return `<defs><linearGradient id="gf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a18" stop-opacity=".35"/><stop offset="1" stop-color="#ff7a18" stop-opacity="0"/></linearGradient></defs><path d="${d} L500 170 L0 170Z" fill="url(#gf)"/><path d="${d}" fill="none" stroke="#ff7a18" stroke-width="2.4"/>`; }
+function curveOut(t, side, a) { const k = (t.price) ; return null; }
+function quote() { const t = window.T, a = +$('amt').value || 0; if (!a) { $('q').innerHTML = ''; return; }
+  // mirror of the server curve: vq/vt from price + raised is not exact, so ask the curve via a dry quote of the constant product
+  const vq = 3000 + t.raised, vt = vq / t.price, fee = 0.01;
+  let out, unit; if (SIDE === 'buy') { const net = a * (1 - fee); out = vt - (vq * vt) / (vq + net); unit = '$' + t.symbol; } else { const g = vq - (vq * vt) / (vt + a); out = g * (1 - fee); unit = 'tQPF'; }
+  window.Q = out; $('q').innerHTML = `<span>you receive ≈ <b style="color:var(--tx)">${SIDE === 'buy' ? big(out) : n(out, 4)} ${unit}</b></span><span>fee 1% · half to the creator, half burned</span><span>max slippage 5%</span>`; }
+async function doTrade() { const t = window.T, amount = +$('amt').value; if (!(amount > 0)) return say('msg', 'enter an amount', 'bad');
+  const acc = await (await fetch('/api/launchpad/account/' + W.addr)).json(), minOut = Math.max(0, (window.Q || 0) * .95);
+  const o = { id: t.id, side: SIDE, amount, minOut, lnonce: acc.lnonce, from: W.addr, pub: W.pub }; o.sig = sign(canon({ amount, chain: CH, from: W.addr, id: t.id, kind: 'lp-trade', lnonce: acc.lnonce, minOut, side: SIDE }));
+  say('msg', 'signing ML-DSA-44 · verifying on QuantumProof…'); const r = await post('/api/launchpad/trade', o);
+  if (r.error) return say('msg', r.error, 'bad'); $('amt').value = ''; toast((SIDE === 'buy' ? 'Bought ' : 'Sold ') + big(r.tokens) + ' $' + t.symbol); load(); }
+const say = (id, h, c = '') => { $(id).innerHTML = `<span class="${c}">${esc(h)}</span>`; };
+// ---------- launch ----------
+window.openLaunch = (ty) => { setType(ty); $('md').classList.add('on'); $('myaddr').textContent = W ? W.addr : 'create a wallet first (Wallet page)'; lquote(); };
+window.setType = (ty) => { TYPE = ty; $('ty-meme').classList.toggle('on', ty === 'meme'); $('ty-tech').classList.toggle('on', ty === 'tech'); $('techf').style.display = ty === 'tech' ? '' : 'none'; lquote(); };
+$('im').onchange = () => { const f = $('im').files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { const im = new Image(); im.onload = () => { const s = 256, c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d'), k = Math.max(s / im.width, s / im.height);
+  x.drawImage(im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k); IMG = c.toDataURL('image/webp', .9); if (IMG.length > 280000 || !IMG.startsWith('data:image/webp')) IMG = c.toDataURL('image/jpeg', .85); $('pv').src = IMG; }; im.src = rd.result; }; rd.readAsDataURL(f); };
+$('db').oninput = () => { $('dbv').textContent = $('db').value + ' tQPF'; lquote(); };
+function lquote() { if (!P) return; const d = +$('db').value; $('lq').innerHTML = `<span>launch fee <b style="color:var(--tx)">${P.launchFee} tQPF</b> (burned)</span><span>dev buy <b style="color:var(--tx)">${d} tQPF</b></span><span>total <b style="color:var(--or2)">${P.launchFee + d} tQPF</b> · graduates at ${P.gradQ.toLocaleString()} tQPF raised</span>`;
+  $('lgo').textContent = W ? (TYPE === 'tech' ? 'Launch tech · sign ML-DSA-44' : 'Launch meme · sign ML-DSA-44') : 'Create a wallet first'; }
+window.verifyRepo = async () => { if (!W) return say('lmsg', 'create a wallet first', 'bad'); $('checks').innerHTML = '<div class="dim">checking GitHub…</div>';
+  const r = await post('/api/launchpad/verify', { repo: $('repo').value.trim(), address: W.addr }); VER = r;
+  const c = r.checks || {}, row = (ok, t) => `<div><span class="${ok ? 'okc' : ok === false ? 'bad' : 'dim'}">${ok ? '✓' : ok === false ? '✗' : '·'}</span>${t}</div>`;
+  $('checks').innerHTML = (r.repo ? row(true, ' found ' + esc(r.repo)) : '') + row(c.publicRepo, ' public repo') + row(c.original, ' original (not a fork)') + row(c.active, ' pushed in the last 180 days') + row(c.ownership, ' your address is in the repo') + (r.ok ? `<div class="okc" style="margin-top:4px">Tech Score ${r.score}/100 · ready to launch</div>` : `<div class="bad" style="margin-top:4px">${esc(r.why)}</div>`); };
+$('lgo').onclick = async () => { if (!W) return location.href = '/wallet'; const name = $('nm').value.trim(), symbol = $('tk').value.trim().toUpperCase().replace(/^\$/, ''), desc = $('ds').value.trim(), devBuy = +$('db').value, repo = TYPE === 'tech' ? $('repo').value.trim() : '';
+  if (!IMG) return say('lmsg', 'add an image', 'bad'); if (TYPE === 'tech' && !(VER && VER.ok)) return say('lmsg', 'verify your GitHub repo first', 'bad');
+  const acc = await (await fetch('/api/launchpad/account/' + W.addr)).json(), imgHash = hex(sha3_256(enc(IMG)));
+  const o = { type: TYPE, name, symbol, desc, image: IMG, repo, devBuy, lnonce: acc.lnonce, from: W.addr, pub: W.pub, x: $('lx').value.trim(), site: $('ls').value.trim() };
+  o.sig = sign(canon({ chain: CH, desc, devBuy, from: W.addr, img: imgHash, kind: 'lp-launch', lnonce: acc.lnonce, name, repo, symbol, type: TYPE }));
+  say('lmsg', 'signing ML-DSA-44 · ' + (TYPE === 'tech' ? 're-verifying GitHub · ' : '') + 'writing to QuantumProof…'); $('lgo').disabled = true;
+  const r = await post('/api/launchpad/launch', o); $('lgo').disabled = false; if (r.error) return say('lmsg', r.error, 'bad');
+  $('md').classList.remove('on'); toast('$' + r.token.symbol + ' launched on QuantumProof'); await load(); openToken(r.token.id); };
+// server signs image by hash: keep the browser and server hash identical (sha3-256 of the data URL string)
+load(); setInterval(load, 8000);
+const q0 = new URLSearchParams(location.search); if (q0.get('t')) openToken(q0.get('t')); if (q0.get('launch')) openLaunch(q0.get('launch'));
+</script></body></html>
