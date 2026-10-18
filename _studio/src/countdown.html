@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="_v.css">
+<style>.dig{display:flex;gap:26px;justify-content:center;align-items:flex-start}.cell{text-align:center}.cell .n{font-family:'JetBrains Mono';font-weight:700;font-size:150px;line-height:1;padding:22px 26px;border-radius:20px;background:linear-gradient(180deg,rgba(255,122,24,.12),rgba(255,122,24,.03));border:1px solid rgba(255,122,24,.35);box-shadow:0 0 60px rgba(255,122,24,.15);min-width:250px;letter-spacing:-.02em}
+.cell .l{font-family:'JetBrains Mono';font-size:15px;letter-spacing:.3em;color:#a3968a;margin-top:14px}.colon{font-family:'JetBrains Mono';font-weight:700;font-size:120px;color:#ff7a18;margin-top:24px}
+.pill{display:inline-block;font-family:'JetBrains Mono';font-size:18px;letter-spacing:.2em;padding:10px 22px;border-radius:99px;border:1px solid rgba(255,122,24,.5);color:#ffb347}.li{display:flex;gap:16px;align-items:center;font-size:30px;margin:14px 0}.li b{color:#4dff9a;font-family:'JetBrains Mono'}</style>
+<body><canvas id="bg" width="1280" height="720"></canvas>
+<div class="c" id="s0"><div><div class="k">quantumproof</div><div class="d" style="font-size:120px;margin-top:10px;line-height:1">T-<span class="g">minus.</span></div></div></div>
+<div class="c" id="s1"><div><div class="k" style="font-size:16px">quantumproof mainnet goes live in</div><div class="dig" style="margin-top:34px"><div class="cell"><div class="n" id="h">24</div><div class="l">HOURS</div></div><div class="colon">:</div><div class="cell"><div class="n" id="m">00</div><div class="l">MINUTES</div></div><div class="colon">:</div><div class="cell"><div class="n" id="s">00</div><div class="l">SECONDS</div></div></div></div></div>
+<div class="c" id="s2"><div style="text-align:left"><div class="pill">MONDAY · OCT 19 · 8 PM ET</div><div class="d" style="font-size:64px;margin:22px 0 18px">What goes live</div>
+ <div class="li" id="i0"><b>✓</b>ML-DSA-65 signs every block</div><div class="li" id="i1"><b>✓</b>Native QPF on a post-quantum L1</div><div class="li" id="i2"><b>✓</b>QuantumDEX, Vaults and the Launchpad</div><div class="li" id="i3"><b>✓</b>$QPF → QPF, 1:1 migration</div></div></div>
+<div class="c" id="s3"><div><svg viewBox="0 0 40 40" style="width:130px"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".55" stop-color="#ff7a18"/><stop offset="1" stop-color="#ff3d00"/></linearGradient></defs><path id="hx" d="M20 3 35 11.5v17L20 37 5 28.5v-17Z" fill="none" stroke="url(#lg)" stroke-width="2.4" pathLength="1" stroke-dasharray="1"/><path d="M20 3v34M5 11.5l30 17M35 11.5l-30 17" stroke="url(#lg)" stroke-width="1.2" opacity=".55"/><circle cx="20" cy="20" r="4.2" fill="url(#lg)"/></svg>
+ <div class="d" style="font-size:86px;margin-top:16px;line-height:1">Mainnet. <span class="g">Tomorrow.</span></div><div class="pill" style="margin-top:26px">MONDAY · OCT 19 · 8 PM ET</div><div class="m" style="font-size:24px;margin-top:22px;color:#ffb347">quantumproofchain.net · $QPF</div></div></div>
+<script>
+const $=(i)=>document.getElementById(i),cl=(x)=>Math.max(0,Math.min(1,x)),e=(x)=>1-Math.pow(1-cl(x),3),win=(t,a,b,f=.3)=>cl((t-a)/f)*cl((b-t)/f);
+const cv=$('bg'),x=cv.getContext('2d'),S=60,P=[];for(let y=-1;y<720/(S*.866)+2;y++)for(let i=-1;i<1280/S+2;i++)P.push([i*S+(y%2?S/2:0),y*S*.866]);
+function bg(t,int,pulse){x.fillStyle='#050403';x.fillRect(0,0,1280,720);x.lineWidth=1.1;for(const[px,py]of P){const d=Math.hypot(px-640,py-360),w=cl(1-Math.abs(d-((t*480)%1500))/170),a=(.06+w*.45+pulse*.25)*int;
+ x.strokeStyle='rgba(255,122,24,'+a+')';x.beginPath();x.moveTo(px,py);x.lineTo(px+S,py);x.moveTo(px,py);x.lineTo(px+S/2,py+S*.866);x.moveTo(px,py);x.lineTo(px-S/2,py+S*.866);x.stroke();}}
+const T=[0,2.6,11.4,16.4],TOTAL=24*3600,p2=(n)=>String(n).padStart(2,'0');
+window.__seek=(t)=>{const f=cl((t-3)/7.6),left=Math.max(0,Math.round(TOTAL*(1-Math.pow(f,.55)))),tick=t>3&&t<11?Math.abs(Math.sin(t*Math.PI*(2+f*10))):0;
+ bg(t,t<2.6?.5:1,tick*.4);
+ $('s0').style.opacity=win(t,.1,2.6);$('s0').firstChild.style.transform='scale('+(1.15-.15*e(t/.8))+')';
+ $('s1').style.opacity=win(t,2.6,11.4);$('h').textContent=p2(Math.floor(left/3600));$('m').textContent=p2(Math.floor(left%3600/60));$('s').textContent=p2(left%60);
+ $('s1').querySelector('.dig').style.transform='scale('+(1+(t>10.2&&t<11.4?(.06*Math.sin((t-10.2)*Math.PI/1.2)):0))+')';
+ $('s2').style.opacity=win(t,11.4,16.4);for(let i=0;i<4;i++){const p=e((t-11.9-i*.4)/.4);$('i'+i).style.opacity=p;$('i'+i).style.transform='translateX('+(1-p)*-40+'px)';}
+ $('s3').style.opacity=e((t-16.4)/.5);$('hx').style.strokeDashoffset=1-e((t-16.5)/1);};
+window.__ready=document.fonts.ready;window.__seek(0);
+</script>
