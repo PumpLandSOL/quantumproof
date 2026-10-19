@@ -9,7 +9,7 @@ module.exports = ({ S, QPF_MINT, save }) => {
   const sol = async (method, params) => { let last; for (const url of RPCS) { try { const j = await (await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })).json(); if (j.error) { last = j.error.message; continue; } return j.result; } catch (e) { last = e.message; } } throw new Error('Solana RPC: ' + (last || 'unavailable')); };
   const DEST = process.env.MIGRATION_WALLET || 'AdjVwWTb8YiBMSsr5E6iEP8tWFixJVhnVA15rAb1Xsgt';
   const DEC = 6, MEMO_PREFIX = 'qpf-migrate:v1:';
-  S.migr = S.migr || { list: [], bySig: {}, alloc: {} };
+  S.migr = S.migr || { list: [], bySig: {}, alloc: {} }; S.migr.pending = S.migr.pending || {};
   const M = S.migr;
   const isSol = (a) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a || ''), isQpf = (a) => /^qpf1[0-9a-f]{40}$/.test(a || '');
   const ui = (raw) => Number(BigInt(raw)) / 10 ** DEC;
@@ -23,9 +23,23 @@ module.exports = ({ S, QPF_MINT, save }) => {
     return { owner, accounts, held: accounts.reduce((s, a) => s + a.ui, 0), blockhash: bh.value.blockhash, dest: dest.pubkey, decimals: DEC, mint: QPF_MINT };
   }
 
+  // "migrate now, pick the ML-DSA address later": memo "qpf-migrate:v1:later" parks the allocation under the Solana wallet.
+  // The wallet binds it to a qpf1 address later by signing BIND_MSG with the same Ed25519 key (Phantom signMessage).
+  const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const b58dec = (s) => { let v = 0n; for (const c of s) { const i = B58.indexOf(c); if (i < 0) throw new Error('b58'); v = v * 58n + BigInt(i); } let h = v.toString(16); if (h.length % 2) h = '0' + h; return Buffer.concat([Buffer.alloc(s.match(/^1*/)[0].length), v ? Buffer.from(h, 'hex') : Buffer.alloc(0)]); };
+  const edVerify = (msg, solAddr, sigHex) => { try { const crypto = require('crypto'), raw = b58dec(solAddr); if (raw.length !== 32) return false; return crypto.verify(null, Buffer.from(msg), crypto.createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), raw]), format: 'der', type: 'spki' }), Buffer.from(sigHex, 'hex')); } catch { return false; } };
+  const BIND_MSG = (s, q) => 'QuantumProof migration v1\nSend my migrated QPF to this post-quantum address.\nSolana: ' + s + '\nQuantumProof: ' + q;
+  function bind(o) {
+    if (!isSol(o.sol)) return [400, 'bad Solana address']; if (!isQpf(o.qpf)) return [400, 'bad qpf1 address'];
+    const raw = M.pending[o.sol]; if (!raw) return [400, 'nothing waiting for an address from this wallet'];
+    if (!/^[0-9a-f]{128}$/.test(o.solSig || '') || !edVerify(BIND_MSG(o.sol, o.qpf), o.sol, o.solSig)) return [400, 'invalid signature from the Solana wallet'];
+    delete M.pending[o.sol]; M.alloc[o.qpf] = (BigInt(M.alloc[o.qpf] || '0') + BigInt(raw)).toString();
+    for (const m of M.list) if (m.sol === o.sol && !m.qpf) m.qpf = o.qpf; save();
+    return [200, { ok: true, sol: o.sol, qpf: o.qpf, amount: ui(raw), allocation: ui(M.alloc[o.qpf]) }];
+  }
   async function record(sig, qpf) {
     if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(sig || '')) return [400, 'bad transaction signature'];
-    if (!isQpf(qpf)) return [400, 'bad qpf1 address'];
+    if (!isQpf(qpf) && qpf !== 'later') return [400, 'bad qpf1 address'];
     if (M.bySig[sig]) return [200, M.bySig[sig]];
     const t = await sol('getTransaction', [sig, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }]);
     if (!t) return [404, 'not confirmed yet'];
@@ -41,6 +55,7 @@ module.exports = ({ S, QPF_MINT, save }) => {
       if (p.info.mint !== QPF_MINT || p.info.authority !== owner || ownerOf[p.info.destination] !== DEST) continue; raw += BigInt(p.info.tokenAmount ? p.info.tokenAmount.amount : p.info.amount); }
     if (raw <= 0n) return [400, 'no $QPF transfer to the migration wallet signed by the owner in this transaction'];
     const m = { sig, sol: owner, qpf, raw: raw.toString(), amount: ui(raw), slot: t.slot, at: (t.blockTime || Math.floor(Date.now() / 1000)) * 1000 };
+    if (qpf === 'later') { m.qpf = null; M.list.push(m); M.bySig[sig] = m; M.pending[owner] = (BigInt(M.pending[owner] || '0') + raw).toString(); save(); return [200, { ...m, later: true, allocation: ui(M.pending[owner]) }]; }
     M.list.push(m); M.bySig[sig] = m; M.alloc[qpf] = (BigInt(M.alloc[qpf] || '0') + raw).toString(); save();
     return [200, { ...m, allocation: ui(M.alloc[qpf]) }];
   }
@@ -50,8 +65,10 @@ module.exports = ({ S, QPF_MINT, save }) => {
     if (p === '/api/migrate/prep') { const o = u.searchParams.get('sol') || ''; if (!isSol(o)) return send(400, { error: 'bad Solana address' }), true;
       try { send(200, await prep(o)); } catch (e) { send(502, { error: String(e.message || e) }); } return true; }
     if (p.startsWith('/api/migrate/of/')) { const k = decodeURIComponent(p.slice(16)); const list = M.list.filter((m) => m.sol === k || m.qpf === k);
-      return send(200, { key: k, migrations: list, allocation: isQpf(k) ? ui(M.alloc[k] || '0') : list.reduce((s, m) => s + m.amount, 0) }), true; }
-    if (p === '/api/migrate/genesis') return send(200, { chain: 'quantumproof-1', mint: QPF_MINT, decimals: DEC, rule: '1 $QPF migrated on Solana = 1 QPF at genesis', allocations: Object.entries(M.alloc).map(([address, raw]) => ({ address, raw, amount: ui(raw) })).sort((a, b) => b.amount - a.amount), proofs: M.list.map((m) => m.sig) }), true;
+      return send(200, { key: k, migrations: list, allocation: isQpf(k) ? ui(M.alloc[k] || '0') : list.reduce((s, m) => s + m.amount, 0), pending: isSol(k) ? ui(M.pending[k] || '0') : 0 }), true; }
+    if (p === '/api/migrate/bindmsg') return send(200, { message: BIND_MSG(u.searchParams.get('sol') || '', u.searchParams.get('qpf') || '') }), true;
+    if (p === '/api/migrate/bind' && req.method === 'POST') { const [c, r] = bind(await body()); return send(c, typeof r === 'string' ? { error: r } : r), true; }
+    if (p === '/api/migrate/genesis') return send(200, { chain: 'quantumproof-1', mint: QPF_MINT, decimals: DEC, rule: '1 $QPF migrated on Solana = 1 QPF at genesis', allocations: Object.entries(M.alloc).map(([address, raw]) => ({ address, raw, amount: ui(raw) })).sort((a, b) => b.amount - a.amount), awaitingAddress: Object.entries(M.pending).map(([solana, raw]) => ({ solana, raw, amount: ui(raw) })), proofs: M.list.map((m) => m.sig) }), true;
     if (p === '/api/migrate' && req.method === 'POST') { const { sig, qpf } = await body();
       try { const [c, r] = await record(sig, qpf); send(c, typeof r === 'string' ? { error: r } : r); } catch (e) { send(502, { error: String(e.message || e) }); } return true; }
     return false;

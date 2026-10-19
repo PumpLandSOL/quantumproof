@@ -30,7 +30,7 @@
  <div class="card st" id="s1"><div class="num">01</div><div><h3>Connect your Solana wallet</h3><p>We read your live $QPF balance on Solana mainnet.</p>
   <div class="row"><button class="btn pri" id="cx">Connect Phantom</button><span class="m dim" id="cxs"></span></div><div id="o1"></div></div></div>
  <div class="card st off" id="s2"><div class="num">02</div><div><h3>Your QuantumProof address</h3><p>Where your native QPF lands. Use the ML-DSA-44 wallet in this browser, or paste a qpf1 address you control.</p>
-  <div class="row"><button class="btn" id="kg">Use my QuantumProof wallet</button></div>
+  <div class="row"><button class="btn" id="kg">Use my QuantumProof wallet</button><button class="btn" id="lt">Set it later</button></div>
   <input class="inp" id="qa" placeholder="qpf1…" spellcheck="false" style="margin-top:12px"><div class="m dim" id="qas" style="margin-top:8px;font-size:12.5px"></div></div></div>
  <div class="card st off" id="s3"><div class="num">03</div><div><h3>Migrate</h3><p>Choose how much to move. Phantom shows a $QPF transfer plus a memo with your qpf1 address.</p>
   <div class="amt"><input class="inp" id="am" inputmode="decimal" placeholder="0"><button class="btn" id="mx">Max</button></div>
@@ -61,18 +61,20 @@ function burnMessage(owner, tokenAcct, dest, mint, program, blockhash, raw, deci
   const m = new TextEncoder().encode(memo); if (m.length > 127) throw new Error('memo too long');
   return new Uint8Array([1, 0, 3, 6, ...K.flatMap((k) => [...k]), ...b58dec(blockhash), 2, 5, 1, 0, m.length, ...m, 4, 4, 1, 3, 2, 0, d.length, ...d]); }
 let SOL = null, P = null, ST = null;
-const isQ = (a) => /^qpf1[0-9a-f]{40}$/.test(a);
+const isQ = (a) => /^qpf1[0-9a-f]{40}$/.test(a); let LATER = false;
+const dest = () => (LATER ? 'later' : $('qa').value.trim());
 function step(i, s) { const e = $('s' + i); e.classList.toggle('off', s === 'off'); e.classList.toggle('done', s === 'done'); }
 function wal() { try { const s = localStorage.getItem('qpf_seed'); if (!s) return null; const k = ml_dsa44.keygen(unhex(s)); return 'qpf1' + hex(sha3_256(k.publicKey)).slice(0, 40); } catch { return null; } }
 async function load() { ST = await (await fetch('/api/migrate')).json();
   $('kp').innerHTML = [['$QPF migrated', n(ST.migrated)], ['Holders migrated', n(ST.holders)], ['Migrations', n(ST.migrations)], ['Rate', '1 : 1']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
-  $('man').innerHTML = ST.recent.length ? ST.recent.map((m) => `<div class="mr"><span>${esc(m.sol.slice(0, 5) + '…' + m.sol.slice(-4))} <span class="dim">→</span> <span class="okc">${short(m.qpf, 8, 4)}</span><br><a class="dim" target="_blank" href="https://solscan.io/tx/${m.sig}">tx ${m.sig.slice(0, 8)}… ↗</a></span><span style="text-align:right">${n(m.amount, 2)} QPF<br><span class="dim">${new Date(m.at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></span></div>`).join('') : '<p class="dim m" style="padding:12px 0">No migrations yet. Be the first.</p>'; }
+  $('man').innerHTML = ST.recent.length ? ST.recent.map((m) => `<div class="mr"><span>${esc(m.sol.slice(0, 5) + '…' + m.sol.slice(-4))} <span class="dim">→</span> <span class="okc">${m.qpf ? short(m.qpf, 8, 4) : 'address later'}</span><br><a class="dim" target="_blank" href="https://solscan.io/tx/${m.sig}">tx ${m.sig.slice(0, 8)}… ↗</a></span><span style="text-align:right">${n(m.amount, 2)} QPF<br><span class="dim">${new Date(m.at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></span></div>`).join('') : '<p class="dim m" style="padding:12px 0">No migrations yet. Be the first.</p>'; }
 load(); setInterval(load, 15000);
 const amt = () => { const x = +String($('am').value).replace(/,/g, ''); return isFinite(x) && x > 0 ? x : 0; };
 function sync() { const a = amt(); $('cv1').textContent = n(a, 6) + ' $QPF'; $('cv2').textContent = n(a, 6) + ' QPF';
   const qa = $('qa').value.trim(); $('qas').innerHTML = !qa ? '' : isQ(qa) ? '<span class="okc">✓ valid qpf1 address</span>' : '<span class="bad">not a qpf1 address</span>';
-  if (P && isQ(qa)) step(3, step3done ? 'done' : ''); else if (!step3done) step(3, 'off');
-  $('go').disabled = !(P && isQ(qa) && a > 0 && a <= P.held + 1e-9 && $('ok').checked); }
+  if (LATER && !qa) $('qas').innerHTML = '<span class="okc">✓ migrate now, choose your qpf1 address any time later on this page</span>'; if (qa) LATER = false;
+  if (P && (LATER || isQ(qa))) step(3, step3done ? 'done' : ''); else if (!step3done) step(3, 'off');
+  $('go').disabled = !(P && (LATER || isQ(qa)) && a > 0 && a <= P.held + 1e-9 && $('ok').checked); }
 let step3done = false;
 ['am', 'qa'].forEach((i) => $(i).addEventListener('input', sync)); $('ok').onchange = sync;
 $('mx').onclick = () => { if (P) { $('am').value = String(P.accounts[0] ? P.accounts[0].ui : 0); sync(); } };
@@ -82,11 +84,13 @@ $('cx').onclick = async () => { const p = prov(); if (!p) { $('cxs').innerHTML =
   $('cxs').textContent = 'reading Solana mainnet…'; try { await refresh(); } catch (e) { $('cxs').textContent = e.message; return; }
   $('cxs').textContent = ''; $('cx').textContent = 'Connected';
   const mine = await (await fetch('/api/migrate/of/' + SOL)).json();
-  $('o1').innerHTML = `<div class="val">${esc(SOL)}</div><p style="margin-top:10px">Holding <b style="color:var(--tx)">${n(P.held, 6)} $QPF</b> on Solana.${mine.migrations.length ? ` Already migrated from this wallet: <b class="okc">${n(mine.allocation, 6)} QPF</b>.` : ''}</p>${P.held ? '' : '<p class="bad" style="margin-top:6px">No $QPF in this wallet.</p>'}`;
+  $('o1').innerHTML = `<div class="val">${esc(SOL)}</div><p style="margin-top:10px">Holding <b style="color:var(--tx)">${n(P.held, 6)} $QPF</b> on Solana.${mine.migrations.length ? ` Already migrated from this wallet: <b class="okc">${n(mine.allocation, 6)} QPF</b>.` : ''}</p>${mine.pending ? `<div class="val" style="margin-top:12px"><b style="color:var(--tx)">${n(mine.pending, 6)} QPF</b> is waiting for a QuantumProof address. Fill in step 02, then <button class="btn pri" id="bd" style="margin-left:6px">Send it to this address</button><div id="bds" class="m" style="margin-top:8px"></div></div>` : ''}${P.held ? '' : '<p class="bad" style="margin-top:6px">No $QPF in this wallet.</p>'}`;
+  if ($('bd')) $('bd').onclick = bindNow;
   step(1, 'done'); step(2, ''); const w = wal(); if (w && !$('qa').value) $('qa').value = w; sync(); };
 $('kg').onclick = () => { let w = wal(); if (!w) { try { localStorage.setItem('qpf_seed', hex(crypto.getRandomValues(new Uint8Array(32)))); } catch {} w = wal(); }
   if (!w) { toast('Browser storage is blocked; paste an address instead'); return; } $('qa').value = w; $('qas').innerHTML = '<span class="okc">✓ your browser wallet</span> · back up its seed in the <a class="okc" href="/wallet">Wallet</a>'; step(2, 'done'); sync(); };
-$('go').onclick = async () => { const qpf = $('qa').value.trim(), a = amt(); $('go').disabled = true; const log = (h) => { $('o3').innerHTML = `<p class="m" style="margin-top:12px">${h}</p>`; };
+$('lt').onclick = () => { $('qa').value = ''; LATER = true; step(2, 'done'); sync(); };
+$('go').onclick = async () => { const qpf = dest(), a = amt(); $('go').disabled = true; const log = (h) => { $('o3').innerHTML = `<p class="m" style="margin-top:12px">${h}</p>`; };
   try { await refresh(); } catch (e) { log(`<span class="bad">${esc(e.message)}</span>`); $('go').disabled = false; return; }
   const acc = P.accounts[0]; let raw = BigInt(Math.round(a * 10 ** P.decimals)); if (!acc || raw > BigInt(acc.raw)) { if (acc && Math.abs(a - acc.ui) < 1e-6) raw = BigInt(acc.raw); else { log('<span class="bad">Amount is more than your token account holds.</span>'); $('go').disabled = false; return; } }
   log('waiting for Phantom…'); let sig;
@@ -99,10 +103,15 @@ $('go').onclick = async () => { const qpf = $('qa').value.trim(), a = amt(); $('
     if (r.status !== 404 && r.status !== 502) { log(`<span class="bad">${esc(j.error)}</span>`); $('go').disabled = false; return; }
     await new Promise((s) => setTimeout(s, 2000)); }
   log(`Still confirming. Your transfer is safe: reopen this page and it will be picked up, or keep this signature: <span class="m">${sig}</span>`); retry(sig, qpf); };
+async function bindNow() { const qpf = $('qa').value.trim(); if (!isQ(qpf)) { $('bds').innerHTML = '<span class="bad">Enter or create a qpf1 address in step 02 first.</span>'; return; }
+  const m = (await (await fetch('/api/migrate/bindmsg?sol=' + SOL + '&qpf=' + qpf)).json()).message; let solSig;
+  try { const r = await prov().signMessage(new TextEncoder().encode(m), 'utf8'); solSig = hex(r.signature || r); } catch { $('bds').innerHTML = '<span class="bad">Signature rejected in Phantom.</span>'; return; }
+  const r = await (await fetch('/api/migrate/bind', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sol: SOL, qpf, solSig }) })).json();
+  if (r.error) { $('bds').innerHTML = '<span class="bad">' + esc(r.error) + '</span>'; return; } $('bds').innerHTML = '<span class="okc">✓ ' + n(r.amount, 6) + ' QPF now goes to ' + short(qpf, 8, 4) + ' at genesis.</span>'; $('bd').remove(); load(); }
 async function retry(sig, qpf) { for (let i = 0; i < 60; i++) { await new Promise((s) => setTimeout(s, 5000)); const r = await fetch('/api/migrate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sig, qpf }) }); if (r.ok) { receipt(await r.json()); load(); return; } } }
 function receipt(m) { const tw = `I just migrated my $QPF to QuantumProof mainnet.\n\n${n(m.amount, 0)} $QPF moved off Solana → ${n(m.amount, 0)} native QPF on a post-quantum L1.\n\nquantumproofchain.net/migrate`;
   $('rc').innerHTML = `<div class="card rcpt"><div class="tp"><span class="kick">migration receipt · quantumproof-1</span><div style="display:flex;justify-content:space-between;align-items:end;margin-top:12px;flex-wrap:wrap;gap:12px"><div class="big">${n(m.amount, 2)} <span class="g">QPF</span></div><div class="m dim">total to this address: ${n(m.allocation, 2)} QPF</div></div></div>
-   <div class="tb"><div><div class="lbl">From · Solana (Ed25519)</div><div class="v bad">${esc(m.sol.slice(0, 6) + '…' + m.sol.slice(-6))}</div></div><div><div class="lbl">To · quantumproof-1 (ML-DSA)</div><div class="v okc">${short(m.qpf, 10, 6)}</div></div>
+   <div class="tb"><div><div class="lbl">From · Solana (Ed25519)</div><div class="v bad">${esc(m.sol.slice(0, 6) + '…' + m.sol.slice(-6))}</div></div><div><div class="lbl">To · quantumproof-1 (ML-DSA)</div><div class="v okc">${m.later ? 'address: set later' : short(m.qpf, 10, 6)}</div></div>${m.later ? '<div style="grid-column:1/-1;color:var(--mu);font-size:14px">Your QPF is held for this Solana wallet. Come back to this page any time, connect the same wallet and choose your qpf1 address with one signature.</div>' : ''}
    <div style="grid-column:1/-1"><div class="lbl">Solana transaction</div><div class="v" style="font-size:12px;color:var(--mu)"><a target="_blank" href="https://solscan.io/tx/${m.sig}">${m.sig} ↗</a></div></div>
    <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><a class="btn pri" target="_blank" href="https://x.com/intent/tweet?text=${encodeURIComponent(tw)}">Share</a><a class="btn" target="_blank" href="/api/migrate/genesis">Genesis file</a></div></div></div>`; }
 </script></body></html>
