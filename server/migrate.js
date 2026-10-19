@@ -14,13 +14,13 @@ module.exports = ({ S, QPF_MINT, save }) => {
   const isSol = (a) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a || ''), isQpf = (a) => /^qpf1[0-9a-f]{40}$/.test(a || '');
   const ui = (raw) => Number(BigInt(raw)) / 10 ** DEC;
   const stats = () => { const holders = new Set(M.list.map((m) => m.sol)); const raw = M.list.reduce((s, m) => s + BigInt(m.raw), 0n);
-    return { mint: QPF_MINT, wallet: DEST, decimals: DEC, memoPrefix: MEMO_PREFIX, migrations: M.list.length, holders: holders.size, addresses: Object.keys(M.alloc).length, migrated: ui(raw), migratedRaw: raw.toString(), recent: M.list.slice(-40).reverse() }; };
+    return { mint: QPF_MINT, decimals: DEC, memoPrefix: MEMO_PREFIX, migrations: M.list.length, holders: holders.size, addresses: Object.keys(M.alloc).length, migrated: ui(raw), migratedRaw: raw.toString(), recent: M.list.slice(-40).reverse() }; };
 
   async function prep(owner) {
     const [ta, bh, dt] = await Promise.all([sol('getTokenAccountsByOwner', [owner, { mint: QPF_MINT }, { encoding: 'jsonParsed', commitment: 'confirmed' }]), sol('getLatestBlockhash', [{ commitment: 'confirmed' }]), sol('getTokenAccountsByOwner', [DEST, { mint: QPF_MINT }, { encoding: 'jsonParsed' }])]);
     const dest = dt.value && dt.value[0]; if (!dest) throw new Error('migration wallet has no $QPF token account');
     const accounts = (ta.value || []).map((a) => ({ pubkey: a.pubkey, program: a.account.owner, raw: a.account.data.parsed.info.tokenAmount.amount, ui: +a.account.data.parsed.info.tokenAmount.uiAmountString })).filter((a) => a.raw !== '0').sort((a, b) => (BigInt(b.raw) > BigInt(a.raw) ? 1 : -1));
-    return { owner, accounts, held: accounts.reduce((s, a) => s + a.ui, 0), blockhash: bh.value.blockhash, wallet: DEST, dest: dest.pubkey, decimals: DEC, mint: QPF_MINT };
+    return { owner, accounts, held: accounts.reduce((s, a) => s + a.ui, 0), blockhash: bh.value.blockhash, dest: dest.pubkey, decimals: DEC, mint: QPF_MINT };
   }
 
   async function record(sig, qpf) {
@@ -51,7 +51,7 @@ module.exports = ({ S, QPF_MINT, save }) => {
       try { send(200, await prep(o)); } catch (e) { send(502, { error: String(e.message || e) }); } return true; }
     if (p.startsWith('/api/migrate/of/')) { const k = decodeURIComponent(p.slice(16)); const list = M.list.filter((m) => m.sol === k || m.qpf === k);
       return send(200, { key: k, migrations: list, allocation: isQpf(k) ? ui(M.alloc[k] || '0') : list.reduce((s, m) => s + m.amount, 0) }), true; }
-    if (p === '/api/migrate/genesis') return send(200, { chain: 'quantumproof-1', mint: QPF_MINT, decimals: DEC, wallet: DEST, rule: '1 $QPF sent to the migration wallet on Solana = 1 QPF at genesis', allocations: Object.entries(M.alloc).map(([address, raw]) => ({ address, raw, amount: ui(raw) })).sort((a, b) => b.amount - a.amount), proofs: M.list.map((m) => m.sig) }), true;
+    if (p === '/api/migrate/genesis') return send(200, { chain: 'quantumproof-1', mint: QPF_MINT, decimals: DEC, rule: '1 $QPF migrated on Solana = 1 QPF at genesis', allocations: Object.entries(M.alloc).map(([address, raw]) => ({ address, raw, amount: ui(raw) })).sort((a, b) => b.amount - a.amount), proofs: M.list.map((m) => m.sig) }), true;
     if (p === '/api/migrate' && req.method === 'POST') { const { sig, qpf } = await body();
       try { const [c, r] = await record(sig, qpf); send(c, typeof r === 'string' ? { error: r } : r); } catch (e) { send(502, { error: String(e.message || e) }); } return true; }
     return false;

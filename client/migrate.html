@@ -23,7 +23,7 @@
 <main class="wrap">
 <section class="hero"><span class="kick">// migration · solana → quantumproof-1</span>
 <h1>Leave Ed25519.<br><span class="g">Bring your $QPF.</span></h1>
-<p>Send $QPF to the migration wallet on Solana and receive native QPF on QuantumProof mainnet, one for one. One Phantom signature. The transfer and your destination address go in the same Solana transaction, and we verify both on-chain before your allocation is recorded.</p></section>
+<p>Send $QPF on Solana and receive native QPF on QuantumProof mainnet, one for one. One Phantom signature. The transfer and your destination address go in the same Solana transaction, and we verify both on-chain before your allocation is recorded.</p></section>
 <div class="kpis" id="kp"></div>
 <div class="lay">
 <div class="steps">
@@ -32,7 +32,7 @@
  <div class="card st off" id="s2"><div class="num">02</div><div><h3>Your QuantumProof address</h3><p>Where your native QPF lands. Use the ML-DSA-44 wallet in this browser, or paste a qpf1 address you control.</p>
   <div class="row"><button class="btn" id="kg">Use my QuantumProof wallet</button></div>
   <input class="inp" id="qa" placeholder="qpf1…" spellcheck="false" style="margin-top:12px"><div class="m dim" id="qas" style="margin-top:8px;font-size:12.5px"></div></div></div>
- <div class="card st off" id="s3"><div class="num">03</div><div><h3>Migrate</h3><p>Choose how much to move. Phantom shows a $QPF transfer to the migration wallet plus a memo with your qpf1 address.</p>
+ <div class="card st off" id="s3"><div class="num">03</div><div><h3>Migrate</h3><p>Choose how much to move. Phantom shows a $QPF transfer plus a memo with your qpf1 address.</p>
   <div class="amt"><input class="inp" id="am" inputmode="decimal" placeholder="0"><button class="btn" id="mx">Max</button></div>
   <div class="conv"><div class="card"><div class="lbl">You send · Solana</div><div class="v bad" id="cv1">0 $QPF</div></div><div class="ar">→</div><div class="card"><div class="lbl">You receive · quantumproof-1</div><div class="v okc" id="cv2">0 QPF</div></div></div>
   <label class="ck"><input type="checkbox" id="ok"><span>I understand the transfer is final on Solana and that my QPF is credited to the address above at quantumproof-1 genesis.</span></label>
@@ -41,9 +41,9 @@
 </div>
 <div>
  <div class="card side"><div class="lbl" style="padding-bottom:12px">How it works</div><ol class="how">
-  <li><b>One transaction, two instructions.</b> A Token-2022 TransferChecked of $QPF to the migration wallet <a class="okc" target="_blank" href="https://solscan.io/account/AdjVwWTb8YiBMSsr5E6iEP8tWFixJVhnVA15rAb1Xsgt">AdjV…Xsgt ↗</a>, and a memo <span class="m">qpf-migrate:v1:&lt;qpf1&gt;</span>.</li>
+  <li><b>One transaction, two instructions.</b> A Token-2022 TransferChecked of $QPF, and a memo <span class="m">qpf-migrate:v1:&lt;qpf1&gt;</span>.</li>
   <li><b>Only you can do it.</b> Your Solana key signs both, so nobody can move your tokens or redirect them to another address.</li>
-  <li><b>Checked on Solana.</b> The server fetches the confirmed transaction and checks the signer, the mint, the recipient, the amount and the memo.</li>
+  <li><b>Checked on Solana.</b> The server fetches the confirmed transaction and checks the signer, the mint, the amount and the memo.</li>
   <li><b>1 : 1 at genesis.</b> Every allocation is public in the <a class="okc" href="/api/migrate/genesis" target="_blank">genesis file</a>, each backed by its Solana signature.</li></ol></div>
  <div class="card man"><div class="lbl" style="padding:12px 0 6px">Migrations · live</div><div id="man"></div></div>
 </div></div>
