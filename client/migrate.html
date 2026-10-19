@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Migrate · QuantumProof</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/lat.css">
-<meta property="og:title" content="Migrate $QPF to QuantumProof mainnet"><meta property="og:description" content="Burn $QPF on Solana, receive native QPF on quantumproof-1, 1:1. One Phantom signature, verified on-chain.">
+<meta property="og:title" content="Migrate $QPF to QuantumProof mainnet"><meta property="og:description" content="Send $QPF on Solana, receive native QPF on quantumproof-1, 1:1. One Phantom signature, verified on-chain.">
 <style>
 .hero{padding:64px 0 6px;text-align:center}.hero h1{font-size:clamp(42px,6.6vw,84px);letter-spacing:-.045em;line-height:.98;margin-top:14px}.hero p{color:var(--mu);font-size:18px;line-height:1.6;max-width:760px;margin:18px auto 0}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}.kpis .card{padding:18px 20px}.kpis .k,.lbl{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}.kpis .v{font-size:28px;font-weight:700;margin-top:6px}
@@ -23,7 +23,7 @@
 <main class="wrap">
 <section class="hero"><span class="kick">// migration · solana → quantumproof-1</span>
 <h1>Leave Ed25519.<br><span class="g">Bring your $QPF.</span></h1>
-<p>Burn $QPF on Solana and receive native QPF on QuantumProof mainnet, one for one. One Phantom signature. The burn and your destination address go in the same Solana transaction, and we verify both on-chain before your allocation is recorded.</p></section>
+<p>Send $QPF to the migration wallet on Solana and receive native QPF on QuantumProof mainnet, one for one. One Phantom signature. The transfer and your destination address go in the same Solana transaction, and we verify both on-chain before your allocation is recorded.</p></section>
 <div class="kpis" id="kp"></div>
 <div class="lay">
 <div class="steps">
@@ -32,18 +32,18 @@
  <div class="card st off" id="s2"><div class="num">02</div><div><h3>Your QuantumProof address</h3><p>Where your native QPF lands. Use the ML-DSA-44 wallet in this browser, or paste a qpf1 address you control.</p>
   <div class="row"><button class="btn" id="kg">Use my QuantumProof wallet</button></div>
   <input class="inp" id="qa" placeholder="qpf1…" spellcheck="false" style="margin-top:12px"><div class="m dim" id="qas" style="margin-top:8px;font-size:12.5px"></div></div></div>
- <div class="card st off" id="s3"><div class="num">03</div><div><h3>Migrate</h3><p>Choose how much to move. Phantom shows a burn of $QPF plus a memo with your qpf1 address.</p>
+ <div class="card st off" id="s3"><div class="num">03</div><div><h3>Migrate</h3><p>Choose how much to move. Phantom shows a $QPF transfer to the migration wallet plus a memo with your qpf1 address.</p>
   <div class="amt"><input class="inp" id="am" inputmode="decimal" placeholder="0"><button class="btn" id="mx">Max</button></div>
-  <div class="conv"><div class="card"><div class="lbl">You burn · Solana</div><div class="v bad" id="cv1">0 $QPF</div></div><div class="ar">→</div><div class="card"><div class="lbl">You receive · quantumproof-1</div><div class="v okc" id="cv2">0 QPF</div></div></div>
-  <label class="ck"><input type="checkbox" id="ok"><span>I understand the burn is permanent on Solana and that my QPF is credited to the address above at quantumproof-1 genesis.</span></label>
-  <div class="row"><button class="btn pri" id="go" disabled>Burn &amp; migrate</button></div><div id="o3"></div></div></div>
+  <div class="conv"><div class="card"><div class="lbl">You send · Solana</div><div class="v bad" id="cv1">0 $QPF</div></div><div class="ar">→</div><div class="card"><div class="lbl">You receive · quantumproof-1</div><div class="v okc" id="cv2">0 QPF</div></div></div>
+  <label class="ck"><input type="checkbox" id="ok"><span>I understand the transfer is final on Solana and that my QPF is credited to the address above at quantumproof-1 genesis.</span></label>
+  <div class="row"><button class="btn pri" id="go" disabled>Migrate</button></div><div id="o3"></div></div></div>
  <div id="rc"></div>
 </div>
 <div>
  <div class="card side"><div class="lbl" style="padding-bottom:12px">How it works</div><ol class="how">
-  <li><b>One transaction, two instructions.</b> A Token-2022 BurnChecked of $QPF, and a memo <span class="m">qpf-migrate:v1:&lt;qpf1&gt;</span>.</li>
-  <li><b>Only you can do it.</b> Your Solana key signs both, so nobody can burn your tokens or redirect them to another address.</li>
-  <li><b>Checked on Solana.</b> The server fetches the confirmed transaction and checks the signer, the mint, the amount burned and the memo.</li>
+  <li><b>One transaction, two instructions.</b> A Token-2022 TransferChecked of $QPF to the migration wallet <a class="okc" target="_blank" href="https://solscan.io/account/AdjVwWTb8YiBMSsr5E6iEP8tWFixJVhnVA15rAb1Xsgt">AdjV…Xsgt ↗</a>, and a memo <span class="m">qpf-migrate:v1:&lt;qpf1&gt;</span>.</li>
+  <li><b>Only you can do it.</b> Your Solana key signs both, so nobody can move your tokens or redirect them to another address.</li>
+  <li><b>Checked on Solana.</b> The server fetches the confirmed transaction and checks the signer, the mint, the recipient, the amount and the memo.</li>
   <li><b>1 : 1 at genesis.</b> Every allocation is public in the <a class="okc" href="/api/migrate/genesis" target="_blank">genesis file</a>, each backed by its Solana signature.</li></ol></div>
  <div class="card man"><div class="lbl" style="padding:12px 0 6px">Migrations · live</div><div id="man"></div></div>
 </div></div>
@@ -59,19 +59,19 @@ const prov = () => window.phantom?.solana || (window.solana?.isPhantom ? window.
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58dec(s) { let v = 0n; for (const ch of s) { const i = B58.indexOf(ch); if (i < 0) throw new Error('b58'); v = v * 58n + BigInt(i); } const o = []; while (v > 0n) { o.unshift(Number(v % 256n)); v /= 256n; } for (const ch of s) { if (ch === '1') o.unshift(0); else break; } return new Uint8Array(o); }
 function b58enc(b) { let v = 0n; for (const x of b) v = v * 256n + BigInt(x); let s = ''; while (v > 0n) { s = B58[Number(v % 58n)] + s; v /= 58n; } for (const x of b) { if (x === 0) s = '1' + s; else break; } return s; }
-// legacy message: [owner (signer, w), tokenAccount (w), mint (w), tokenProgram, memoProgram]; ix0 memo, ix1 BurnChecked
-function burnMessage(owner, tokenAcct, mint, program, blockhash, raw, decimals, memo) {
-  const K = [owner, tokenAcct, mint, program, 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'].map(b58dec); if (K.some((k) => k.length !== 32)) throw new Error('bad key');
-  const d = new Uint8Array(10); d[0] = 15; let v = BigInt(raw); for (let i = 0; i < 8; i++) { d[1 + i] = Number(v & 255n); v >>= 8n; } d[9] = decimals;
+// legacy message: [owner (signer, w), source (w), dest (w), mint, tokenProgram, memoProgram]; ix0 memo, ix1 TransferChecked
+function burnMessage(owner, tokenAcct, dest, mint, program, blockhash, raw, decimals, memo) {
+  const K = [owner, tokenAcct, dest, mint, program, 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'].map(b58dec); if (K.some((k) => k.length !== 32)) throw new Error('bad key');
+  const d = new Uint8Array(10); d[0] = 12; let v = BigInt(raw); for (let i = 0; i < 8; i++) { d[1 + i] = Number(v & 255n); v >>= 8n; } d[9] = decimals;
   const m = new TextEncoder().encode(memo); if (m.length > 127) throw new Error('memo too long');
-  return new Uint8Array([1, 0, 2, 5, ...K.flatMap((k) => [...k]), ...b58dec(blockhash), 2, 4, 1, 0, m.length, ...m, 3, 3, 1, 2, 0, d.length, ...d]); }
+  return new Uint8Array([1, 0, 3, 6, ...K.flatMap((k) => [...k]), ...b58dec(blockhash), 2, 5, 1, 0, m.length, ...m, 4, 4, 1, 3, 2, 0, d.length, ...d]); }
 let SOL = null, P = null, ST = null;
 const isQ = (a) => /^qpf1[0-9a-f]{40}$/.test(a);
 function step(i, s) { const e = $('s' + i); e.classList.toggle('off', s === 'off'); e.classList.toggle('done', s === 'done'); }
 function wal() { try { const s = localStorage.getItem('qpf_seed'); if (!s) return null; const k = ml_dsa44.keygen(unhex(s)); return 'qpf1' + hex(sha3_256(k.publicKey)).slice(0, 40); } catch { return null; } }
 async function load() { ST = await (await fetch('/api/migrate')).json();
   $('kp').innerHTML = [['$QPF migrated', n(ST.migrated)], ['Holders migrated', n(ST.holders)], ['Migrations', n(ST.migrations)], ['Rate', '1 : 1']].map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
-  $('man').innerHTML = ST.recent.length ? ST.recent.map((m) => `<div class="mr"><span>${esc(m.sol.slice(0, 5) + '…' + m.sol.slice(-4))} <span class="dim">→</span> <span class="okc">${short(m.qpf, 8, 4)}</span><br><a class="dim" target="_blank" href="https://solscan.io/tx/${m.sig}">burn ${m.sig.slice(0, 8)}… ↗</a></span><span style="text-align:right">${n(m.amount, 2)} QPF<br><span class="dim">${new Date(m.at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></span></div>`).join('') : '<p class="dim m" style="padding:12px 0">No migrations yet. Be the first.</p>'; }
+  $('man').innerHTML = ST.recent.length ? ST.recent.map((m) => `<div class="mr"><span>${esc(m.sol.slice(0, 5) + '…' + m.sol.slice(-4))} <span class="dim">→</span> <span class="okc">${short(m.qpf, 8, 4)}</span><br><a class="dim" target="_blank" href="https://solscan.io/tx/${m.sig}">tx ${m.sig.slice(0, 8)}… ↗</a></span><span style="text-align:right">${n(m.amount, 2)} QPF<br><span class="dim">${new Date(m.at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></span></div>`).join('') : '<p class="dim m" style="padding:12px 0">No migrations yet. Be the first.</p>'; }
 load(); setInterval(load, 15000);
 const amt = () => { const x = +String($('am').value).replace(/,/g, ''); return isFinite(x) && x > 0 ? x : 0; };
 function sync() { const a = amt(); $('cv1').textContent = n(a, 6) + ' $QPF'; $('cv2').textContent = n(a, 6) + ' QPF';
@@ -95,19 +95,19 @@ $('go').onclick = async () => { const qpf = $('qa').value.trim(), a = amt(); $('
   try { await refresh(); } catch (e) { log(`<span class="bad">${esc(e.message)}</span>`); $('go').disabled = false; return; }
   const acc = P.accounts[0]; let raw = BigInt(Math.round(a * 10 ** P.decimals)); if (!acc || raw > BigInt(acc.raw)) { if (acc && Math.abs(a - acc.ui) < 1e-6) raw = BigInt(acc.raw); else { log('<span class="bad">Amount is more than your token account holds.</span>'); $('go').disabled = false; return; } }
   log('waiting for Phantom…'); let sig;
-  try { const msg = burnMessage(SOL, acc.pubkey, P.mint, acc.program, P.blockhash, raw, P.decimals, 'qpf-migrate:v1:' + qpf);
+  try { const msg = burnMessage(SOL, acc.pubkey, P.dest, P.mint, acc.program, P.blockhash, raw, P.decimals, 'qpf-migrate:v1:' + qpf);
     const r = await prov().request({ method: 'signAndSendTransaction', params: { message: b58enc(msg) } }); sig = r.signature; }
   catch (e) { log(`<span class="bad">${esc(e.message || 'Transaction rejected in Phantom.')}</span>`); $('go').disabled = false; return; }
   log(`sent <a class="okc" target="_blank" href="https://solscan.io/tx/${sig}">${sig.slice(0, 10)}… ↗</a> · waiting for Solana confirmation…`);
   for (let i = 0; i < 45; i++) { const r = await fetch('/api/migrate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sig, qpf }) }); const j = await r.json();
-    if (r.status === 200) { log('<span class="okc">Burn verified on Solana. Allocation recorded.</span>'); step3done = true; step(3, 'done'); receipt(j); load(); return; }
+    if (r.status === 200) { log('<span class="okc">Transfer verified on Solana. Allocation recorded.</span>'); step3done = true; step(3, 'done'); receipt(j); load(); return; }
     if (r.status !== 404 && r.status !== 502) { log(`<span class="bad">${esc(j.error)}</span>`); $('go').disabled = false; return; }
     await new Promise((s) => setTimeout(s, 2000)); }
-  log(`Still confirming. Your burn is safe: reopen this page and it will be picked up, or keep this signature: <span class="m">${sig}</span>`); retry(sig, qpf); };
+  log(`Still confirming. Your transfer is safe: reopen this page and it will be picked up, or keep this signature: <span class="m">${sig}</span>`); retry(sig, qpf); };
 async function retry(sig, qpf) { for (let i = 0; i < 60; i++) { await new Promise((s) => setTimeout(s, 5000)); const r = await fetch('/api/migrate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sig, qpf }) }); if (r.ok) { receipt(await r.json()); load(); return; } } }
-function receipt(m) { const tw = `I just migrated my $QPF to QuantumProof mainnet.\n\n${n(m.amount, 0)} $QPF burned on Solana → ${n(m.amount, 0)} native QPF on a post-quantum L1.\n\nquantumproofchain.net/migrate`;
+function receipt(m) { const tw = `I just migrated my $QPF to QuantumProof mainnet.\n\n${n(m.amount, 0)} $QPF moved off Solana → ${n(m.amount, 0)} native QPF on a post-quantum L1.\n\nquantumproofchain.net/migrate`;
   $('rc').innerHTML = `<div class="card rcpt"><div class="tp"><span class="kick">migration receipt · quantumproof-1</span><div style="display:flex;justify-content:space-between;align-items:end;margin-top:12px;flex-wrap:wrap;gap:12px"><div class="big">${n(m.amount, 2)} <span class="g">QPF</span></div><div class="m dim">total to this address: ${n(m.allocation, 2)} QPF</div></div></div>
    <div class="tb"><div><div class="lbl">From · Solana (Ed25519)</div><div class="v bad">${esc(m.sol.slice(0, 6) + '…' + m.sol.slice(-6))}</div></div><div><div class="lbl">To · quantumproof-1 (ML-DSA)</div><div class="v okc">${short(m.qpf, 10, 6)}</div></div>
-   <div style="grid-column:1/-1"><div class="lbl">Burn transaction</div><div class="v" style="font-size:12px;color:var(--mu)"><a target="_blank" href="https://solscan.io/tx/${m.sig}">${m.sig} ↗</a></div></div>
+   <div style="grid-column:1/-1"><div class="lbl">Solana transaction</div><div class="v" style="font-size:12px;color:var(--mu)"><a target="_blank" href="https://solscan.io/tx/${m.sig}">${m.sig} ↗</a></div></div>
    <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><a class="btn pri" target="_blank" href="https://x.com/intent/tweet?text=${encodeURIComponent(tw)}">Share</a><a class="btn" target="_blank" href="/api/migrate/genesis">Genesis file</a></div></div></div>`; }
 </script></body></html>
